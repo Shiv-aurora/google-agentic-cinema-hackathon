@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.venv/
+.cache/
+__pycache__/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+data/
+artifacts/
+*.log
+.DS_Store
+playwright-report/
+test-results/
+.playwright-cli/
+output/playwright/
