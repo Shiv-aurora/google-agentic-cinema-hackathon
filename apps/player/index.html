@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clappy camera</title><style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10150e;color:#b8c7aa;font:14px system-ui}
+video{width:100%;height:100%;object-fit:contain}#status{position:absolute;bottom:12px;left:12px;background:#10150edd;padding:6px 10px;border-radius:6px}#status:empty{display:none}
+</style></head><body><video autoplay muted playsinline></video><div id="status" role="status">Connecting camera…</div>
+<script src="/stream/reader.js"></script>
+<script nonce="__CLAPPY_NONCE__">
+const video=document.querySelector('video'), status=document.querySelector('#status');
+let reader;
+fetch(__CLAPPY_TICKET_URL__, {credentials:'same-origin'}).then(async response=>{
+  if(!response.ok)throw new Error('This camera is no longer available to this production.');
+  const ticket=await response.json();
+  reader=new MediaMTXWebRTCReader({url:new URL(`/stream/${ticket.path}/whep`,location.href).href,
+    user:ticket.user,pass:ticket.pass,
+    onError:()=>{status.textContent='Camera connection interrupted. Reconnecting…';},
+    onTrack:event=>{video.srcObject=event.streams[0];status.textContent='';video.play().catch(()=>{if(video.paused)status.textContent='Tap to play camera';});}});
+}).catch(error=>{status.textContent=error.message;});
+video.addEventListener('click',()=>video.play().then(()=>{status.textContent='';}).catch(()=>{}));
+video.addEventListener('playing',()=>{status.textContent='';});
+window.addEventListener('pagehide',()=>reader?.close());
+</script></body></html>
