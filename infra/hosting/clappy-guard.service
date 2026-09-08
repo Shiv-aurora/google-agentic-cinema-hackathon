@@ -1,0 +1,7 @@
+[Unit]
+Description=Clappy demo egress circuit breaker
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/clappy/scripts/host_guard.py
