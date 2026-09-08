@@ -1,0 +1,9 @@
+{
+  "provider": "Google Cloud Vertex AI",
+  "model": "gemini-3.1-flash-image",
+  "project": "clappy-cinema-2026-0907",
+  "created_at": "2026-09-07T23:05:49.291661+00:00",
+  "prompt": "Create one exquisite cinematic illustrated film still for an original intimate drama called The Last Train.\nLandscape 16:9, two fictional adults around age 30 seated opposite one another in a nearly empty vintage train compartment at night.\nThe man, Tom, sits on the LEFT third of frame, wearing a charcoal-brown wool jacket over a dark shirt, short dark slightly tousled hair,\nthoughtful restrained expression. The woman, Bella, sits on the RIGHT third, wearing a muted ochre coat, shoulder-length dark wavy hair,\nemotionally guarded eyes, holding a small old paper train ticket in her hands. Both faces visible in three-quarter profile, looking toward each other.\nMedium-wide two-shot, both shown from chest to head with comfortable headroom. Keep each face in its respective third so this same image\ncan support derived close-up crops. The table and a small empty space separate them. Rainy dark window centered behind them with cool teal\nreflections; warm amber practical lamps light their faces. Muted forest green upholstery, dark wood, brass details. Strong warm/cool separation,\ndeep shadows but readable faces, subtle atmospheric grain, premium painterly photoreal concept-art finish, restrained cinematic framing,\nemotion through the distance between two people. Original fictional faces, not celebrities. No other people. No text, logos, lettering, or visible watermark.\nThis will be openly labeled a synthetic still-frame animatic, not a real live-action recording.",
+  "sha256": "8111ce19d11b34cd096d1e11071d18476478e09dafe71be11e66ac266ad910d3",
+  "disclosure": "Original Google-generated still plate. Animatic views are derived crops, not independent live-action angles."
+}
