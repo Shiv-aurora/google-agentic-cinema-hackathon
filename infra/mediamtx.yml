@@ -1,0 +1,25 @@
+# Template. Run scripts.configure_media_auth before starting Compose.
+logLevel: info
+api: yes
+apiAddress: :9997
+playback: yes
+playbackAddress: :9996
+rtspTransports: [tcp]
+rtmp: no
+hls: no
+srt: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcAdditionalHosts: [127.0.0.1, localhost]
+authInternalUsers: []
+pathDefaults:
+  record: yes
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordSegmentDuration: 10s
+  recordDeleteAfter: 0s
+paths:
+  all_others:

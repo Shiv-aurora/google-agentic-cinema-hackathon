@@ -1,0 +1,27 @@
+name: clappy
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.0@sha256:19fddade8d6110a3d718ac0045681fbeba344ae563a066205fe5929a87f7582f
+    ports:
+      - "127.0.0.1:8554:8554"
+      - "127.0.0.1:8889:8889"
+      - "127.0.0.1:9997:9997"
+      - "127.0.0.1:9996:9996"
+      - "127.0.0.1:8189:8189/udp"
+      - "127.0.0.1:8189:8189/tcp"
+    volumes:
+      - ../data/mediamtx-secure.json:/mediamtx.yml:ro
+      - ../data/recordings:/recordings
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8@sha256:0152dd511befe6a2c2ef53e930726179669b08116da78500b37c51c96ff5ee77
+    ports:
+      - "127.0.0.1:8123:8123"
+    environment:
+      CLICKHOUSE_DB: clappy
+      CLICKHOUSE_USER: clappy
+      CLICKHOUSE_PASSWORD: clappy-local-only
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - clappy-clickhouse:/var/lib/clickhouse
+volumes:
+  clappy-clickhouse:
