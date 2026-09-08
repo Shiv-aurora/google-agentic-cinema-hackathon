@@ -1,0 +1,38 @@
+name: clappy-hosted
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.0@sha256:19fddade8d6110a3d718ac0045681fbeba344ae563a066205fe5929a87f7582f
+    restart: unless-stopped
+    mem_limit: 768m
+    pids_limit: 128
+    ports:
+      - "127.0.0.1:8554:8554"
+      - "127.0.0.1:8889:8889"
+      - "127.0.0.1:9997:9997"
+      - "8189:8189/udp"
+      - "8189:8189/tcp"
+    volumes:
+      - ../../data/mediamtx-secure.json:/mediamtx.yml:ro
+      - ../../data/recordings:/recordings
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '2'}
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8@sha256:0152dd511befe6a2c2ef53e930726179669b08116da78500b37c51c96ff5ee77
+    restart: unless-stopped
+    mem_limit: 3g
+    pids_limit: 1024
+    ports:
+      - "127.0.0.1:8123:8123"
+    environment:
+      CLICKHOUSE_DB: clappy
+      CLICKHOUSE_USER: clappy
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Private hosting environment required}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes:
+      - clappy-clickhouse:/var/lib/clickhouse
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '2'}
+volumes:
+  clappy-clickhouse:
