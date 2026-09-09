@@ -59,7 +59,7 @@ export function useSourceClock(session: Session | null, enabled: boolean, api: A
             client_receive_ms:probe.client_receive_ms,frames});
           if(!disposed)setStatus(`Source frame codes read · ${frames.length}/3 program streams`);
         } else if(!disposed)setStatus("Waiting for readable source frame codes");
-      } catch { if(!disposed)setStatus("Source clock sampling unavailable — timing remains estimated"); }
+      } catch { if(!disposed)setStatus("Source clock sampling unavailable. Timing remains estimated"); }
       finally {busy=false;}
     };
     // One small pixel strip per stream per second; no per-frame network traffic.

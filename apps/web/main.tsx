@@ -12,6 +12,7 @@ import {
   Layers,
   LoaderCircle,
   Maximize2,
+  MessageCircle,
   Moon,
   Radio,
   Sparkles,
@@ -109,6 +110,7 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [now, setNow] = useState(Date.now() / 1000);
   const [sceneOpen, setSceneOpen] = useState(false);
+  const [directorOpen, setDirectorOpen] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [events, setEvents] = useState<
     { seq: number; kind: string; timestamp: number; payload: unknown }[]
@@ -433,7 +435,7 @@ function App() {
           )}
           {session ? (
             page === "shoot" ? (
-              <>
+              <div className="shoot-workspace">
                 <div className="shoot-grid">
                   <section className="program-panel">
                     <div className="panel-title">
@@ -564,39 +566,41 @@ function App() {
                     </div>
                   </section>
                 </div>
-                <div className="section-label">
-                  <span>
-                    THE CAMERA CREW <small>3 virtual iPhones</small>
-                  </span>
-                  <span>Choose a view to cut to it</span>
+                <div className="studio-lower">
+                  <div className="crew-dock">
+                    <div className="section-label">
+                      <span>
+                        CAMERA CREW <small>3 virtual iPhones</small>
+                      </span>
+                      <span>Choose a view to cut</span>
+                    </div>
+                    <div className="camera-grid">
+                      {session.cameras.map((cam) => (
+                        <CameraCard
+                          sessionId={session.id}
+                          key={cam.id}
+                          camera={cam}
+                          preview={preview(cam.id)}
+                          selected={cam.id === session.selected_camera}
+                          path={rolling ? take?.paths?.[cam.id] : undefined}
+                          disabled={busy || (rolling && cam.state !== 'RECORDING')}
+                          onSelect={() => command("switch", cam.id)}
+                          onHold={() =>
+                            command(
+                              session.hold && session.selected_camera === cam.id
+                                ? "release"
+                                : "hold",
+                              cam.id,
+                            )
+                          }
+                          holding={session.hold && session.selected_camera === cam.id}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <DirectionStudio session={session} busy={busy} transitioning={transitioning}
+                    onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
                 </div>
-                <div className="camera-grid">
-                  {session.cameras.map((cam) => (
-                      <CameraCard
-                      sessionId={session.id}
-                      key={cam.id}
-                        camera={cam}
-                        preview={preview(cam.id)}
-                      selected={cam.id === session.selected_camera}
-                      path={rolling ? take?.paths?.[cam.id] : undefined}
-                      disabled={busy || (rolling && cam.state !== 'RECORDING')}
-                      onSelect={() => command("switch", cam.id)}
-                      onHold={() =>
-                        command(
-                          session.hold && session.selected_camera === cam.id
-                            ? "release"
-                            : "hold",
-                          cam.id,
-                        )
-                      }
-                      holding={
-                        session.hold && session.selected_camera === cam.id
-                      }
-                    />
-                  ))}
-                </div>
-                <DirectionStudio session={session} busy={busy} transitioning={transitioning}
-                  onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
                 <div className="transport">
                   <div className="take-counter">
                     <span>SCENE</span>
@@ -658,13 +662,7 @@ function App() {
                           : "Arm cameras"}
                   </button>
                 </div>
-                <VoiceControl disabled={transitioning||busy} onAudio={voice}/>
-                {session.queued_direction&&<div className="queued-direction" role="status"><strong>{session.queued_direction.status}</strong> {session.queued_direction.note} <span>Bound to screenplay line {session.queued_direction.target_line_id+1}.</span></div>}
-                <AgentNote
-                  session={session}
-                  onSend={(note) => direct(note, "recall")}
-                />
-              </>
+              </div>
             ) : (
               <Review
                 session={session}
@@ -725,6 +723,29 @@ function App() {
           </footer>
         </div>
       </main>
+      {session && page === "shoot" && (
+        <div className={`director-assistant ${directorOpen ? "open" : ""}`}>
+          {directorOpen && (
+            <section className="director-popover" aria-label="Clappy director">
+              <div className="director-popover-header">
+                <span><Sparkles size={16}/><strong>Clappy director</strong></span>
+                <button className="icon-button" onClick={() => setDirectorOpen(false)} aria-label="Close director">
+                  <X size={17}/>
+                </button>
+              </div>
+              <p className="director-popover-intro">Speak a direction or ask about this production.</p>
+              <VoiceControl disabled={transitioning||busy} onAudio={voice}/>
+              {session.queued_direction&&<div className="queued-direction" role="status"><strong>{session.queued_direction.status}</strong> {session.queued_direction.note} <span>Screenplay line {session.queued_direction.target_line_id+1}.</span></div>}
+              <AgentNote session={session} compact onSend={(note) => direct(note, "recall")}/>
+            </section>
+          )}
+          <button className="director-fab" onClick={() => setDirectorOpen(value => !value)}
+            aria-label={directorOpen ? "Close Clappy director" : "Talk to Clappy director"}
+            aria-expanded={directorOpen} title="Talk to Clappy director">
+            <MessageCircle size={21}/>
+          </button>
+        </div>
+      )}
       {sceneOpen && session && (
         <SceneDialog
           session={session}
@@ -800,7 +821,7 @@ function DecisionHud({session,take}:{session:Session;take:Take}) {
 
 function Stream({ camera, path, frameRef, preview, sessionId }: { camera: Camera; sessionId:string; path?: string; preview?:string; frameRef?:React.RefObject<HTMLIFrameElement|null> }) {
   if(path&&camera.state!=='RECORDING')return <div className="empty-stream" role="status"><span>{camera.role} unavailable</span><small>Live connection interrupted</small></div>;
-  if(!path&&preview)return <img className="source-preview" src={preview} alt={`${camera.role} — virtual camera preview`}/>;
+  if(!path&&preview)return <img className="source-preview" src={preview} alt={`${camera.role} - virtual camera preview`}/>;
   if (!path)
     return (
       <div
@@ -1104,7 +1125,7 @@ function Review({
                     background: session.cameras.find((c) => c.id === seg.camera)
                       ?.color,
                   }}
-                  title={`${seg.camera.toUpperCase()} · ${clock(seg.start)}–${clock(seg.end)}`}
+                  title={`${seg.camera.toUpperCase()} · ${clock(seg.start)}-${clock(seg.end)}`}
                 >
                   <b>{seg.camera.toUpperCase()}</b>
                   <span>{(seg.end - seg.start).toFixed(1)}s</span>
@@ -1176,10 +1197,12 @@ function Review({
 function AgentNote({
   session,
   editing = false,
+  compact = false,
   onSend,
 }: {
   session: Session;
   editing?: boolean;
+  compact?: boolean;
   onSend: (note: string) => Promise<void>;
 }) {
   const [note, setNote] = useState("");
@@ -1187,7 +1210,7 @@ function AgentNote({
   const thinking = sending || session.agent?.status === "THINKING";
   return (
     <section className="agent-note">
-      <div className="agent-note-title">
+      {!compact && <div className="agent-note-title">
         <Clapperboard size={20} />
         <div>
           <strong>
@@ -1198,7 +1221,7 @@ function AgentNote({
             {editing ? " · Your original edit stays untouched." : ""}
           </p>
         </div>
-      </div>
+      </div>}
       <form
         onSubmit={async (event) => {
           event.preventDefault();

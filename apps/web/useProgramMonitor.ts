@@ -39,7 +39,7 @@ export function useProgramMonitor(session: Session | null, enabled: boolean, api
       void api(`/api/sessions/${sessionId}/monitor`, { method: "POST", signal: controller.signal,
         body: JSON.stringify({ id: crypto.randomUUID(), browser_id: browserId.current, take_id: takeId,
           clock_epoch: epoch, camera, decision_time: decisionTime, kind, browser_ms: performance.now(), ...extra })
-      }).catch(() => { if (!stopped) setStatus("Playback evidence not saved — check connection"); })
+      }).catch(() => { if (!stopped) setStatus("Playback evidence not saved. Check connection"); })
         .finally(() => { clearTimeout(timeout); pending.delete(controller); });
     };
     const onFrame: VideoFrameRequestCallback = (now, metadata) => {
@@ -66,7 +66,7 @@ export function useProgramMonitor(session: Session | null, enabled: boolean, api
     const tick = () => {
       if (!monitorVisible()) {
         lastFrame = performance.now(); candidates.clear();
-        if (visible) setStatus("Monitor off screen — observations suspended");
+        if (visible) setStatus("Monitor off screen. Observations suspended");
         visible = false;
         return;
       }
@@ -102,7 +102,7 @@ export function useProgramMonitor(session: Session | null, enabled: boolean, api
         report("stalled", { ...sample, stalled_for_ms: Math.min(age, 60000), fallback_camera: fallback ?? null });
         reportedStall = true;
         requestedFallback = Boolean(fallback);
-        setStatus(fallback ? "Playback stalled — requesting camera fallback" : "Playback stalled — no progressing fallback");
+        setStatus(fallback ? "Playback stalled. Requesting camera fallback" : "Playback stalled. No progressing fallback");
       }
     };
     const timer = window.setInterval(tick, 250);

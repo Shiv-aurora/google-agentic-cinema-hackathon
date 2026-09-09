@@ -12,7 +12,7 @@ CAMERAS = [
     {"id": "b", "name": "Camera B", "role": "Bella", "framing": "Close-up", "color": "#dbbd91"},
     {"id": "c", "name": "Camera C", "role": "Wide", "framing": "Two-shot", "color": "#a9c7a5"},
 ]
-SCRIPT = """INT. THE LAST TRAIN — NIGHT
+SCRIPT = """INT. THE LAST TRAIN - NIGHT
 
 TOM
 You kept the ticket.

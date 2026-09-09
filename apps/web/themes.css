@@ -318,3 +318,166 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 
 @media (prefers-reduced-motion: reduce) { .decision-hud { animation: none; } }
+
+/* Desktop studio shell. The production surface behaves like an editor: the
+   document stays fixed while screenplay and review panes manage their own
+   overflow. Mobile keeps natural document flow for touch accessibility. */
+.director-assistant {
+  position: fixed;
+  z-index: 16;
+  left: 94px;
+  bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+}
+.director-fab {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px #14243a2b;
+}
+.director-fab:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+.director-popover {
+  width: min(420px, calc(100vw - 120px));
+  max-height: min(540px, calc(100dvh - 100px));
+  overflow-y: auto;
+  padding: 18px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px #14243a30;
+  animation: director-popover-in 180ms ease-out both;
+}
+.director-popover-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.director-popover-header > span { display: flex; align-items: center; gap: 9px; }
+.director-popover-header svg { color: var(--accent); }
+.director-popover-header strong { font: 600 14px 'Manrope Variable', Manrope, sans-serif; }
+.director-popover-intro { margin: 8px 0 16px; color: var(--muted); font-size: 11px; }
+.director-popover .voice-control { align-items: flex-start; flex-direction: column; gap: 8px; margin: 0; padding: 0 0 16px; border-bottom: 1px solid var(--line); }
+.director-popover .voice-control > button { width: 100%; }
+.director-popover .voice-control > span { font-size: 10px; line-height: 1.45; }
+.director-popover .agent-note { margin: 0; padding: 16px 0 0; }
+.director-popover .agent-note form { align-items: stretch; flex-direction: column; }
+.director-popover .agent-note input { min-height: 42px; background: var(--surface); }
+.director-popover .agent-note .primary { align-self: flex-end; }
+.director-popover .agent-response { max-height: 170px; overflow-y: auto; margin-top: 13px; font-size: 12px; }
+.director-popover .queued-direction { margin: 14px 0 0; }
+@keyframes director-popover-in { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (min-width: 960px) and (min-height: 760px) {
+  html, body, #root { height: 100%; overflow: hidden; }
+  .app-shell { height: 100dvh; min-height: 0; overflow: hidden; }
+  main { display: flex; height: 100dvh; min-height: 0; flex-direction: column; overflow: hidden; }
+  .topbar { height: 64px; min-height: 64px; padding-inline: 28px; }
+  .workspace {
+    width: 100%;
+    height: calc(100dvh - 64px);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 28px 8px;
+    overflow: hidden;
+  }
+  .production-header { min-height: 38px; }
+  .production-header h1 { font-size: clamp(24px, 2vw, 30px); }
+  .workspace-tabs { min-height: 36px; margin: 3px 0 8px; }
+  .workspace-tabs button { min-height: 36px; padding-bottom: 8px; }
+  .mode-label { margin-top: 7px; }
+  .error-banner { flex: 0 0 auto; margin-bottom: 8px; padding-block: 8px; }
+  .shoot-workspace {
+    min-height: 0;
+    flex: 1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 158px 56px;
+    gap: 9px;
+  }
+  .shoot-grid { min-height: 0; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
+  .program-panel, .script-panel { height: 100%; min-height: 0; }
+  .program-panel { display: flex; flex-direction: column; overflow: hidden; }
+  .program-panel .panel-title { min-height: 32px; height: 32px; }
+  .program-screen { min-height: 0; flex: 1; aspect-ratio: auto; }
+  .program-caption { min-height: 24px; padding-block: 4px; font-size: 9px; }
+  .monitor-health { flex: 0 0 auto; padding-block: 4px; font-size: 8px; }
+  .script-panel { max-height: none; }
+  .script-panel .panel-title { min-height: 32px; height: 32px; }
+  .script-heading { padding: 9px 12px 4px; }
+  .script-body { padding-inline: 4px; }
+  .script-line { gap: 7px; padding: 4px 8px; }
+  .script-line h4 { margin: 0 0 2px; font-size: 8px; }
+  .script-line p { font-size: 11px; line-height: 1.35; }
+  .line-num { font-size: 8px; line-height: 14px; }
+  .script-footer { padding: 6px 10px; font-size: 8px; }
+  .studio-lower { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; overflow: hidden; }
+  .crew-dock { min-width: 0; display: flex; flex-direction: column; }
+  .crew-dock .section-label { min-height: 20px; margin: 0 0 3px; align-items: center; }
+  .camera-grid { min-height: 0; flex: 1; gap: 10px; }
+  .camera-card { min-height: 0; display: grid; grid-template-rows: 24px minmax(0,1fr) 25px; overflow: hidden; }
+  .camera-card-header { height: 24px; padding-inline: 3px; font-size: 9px; }
+  .camera-card-header b { width: 17px; height: 17px; font-size: 8px; }
+  .camera-state { font-size: 7px; }
+  .camera-select { min-height: 0; gap: 10px; padding: 5px 7px; border-radius: 9px; }
+  .phone-frame { width: 64px; height: 76px; border-width: 3px; border-radius: 12px; }
+  .phone-island { top: 3px; width: 26px; height: 7px; }
+  .phone-bottom { height: 20px; }
+  .phone-bottom > span:first-child { display: none; }
+  .phone-shutter { width: 11px; height: 11px; }
+  .camera-info h3 { margin-bottom: 2px; font-size: 16px; }
+  .camera-info p { font-size: 9px; }
+  .camera-spec { margin-top: 8px; font-size: 7px; }
+  .camera-card-footer { height: 25px; padding-inline: 3px; }
+  .camera-card-footer > span, .camera-card-footer button { font-size: 8px; }
+  .camera-card-footer button { min-height: 24px; }
+  .studio-lower .direction-studio { min-height: 0; margin: 0; padding: 0; border: 0; overflow: hidden; }
+  .studio-lower .direction-heading { gap: 10px; }
+  .studio-lower .direction-identity { gap: 8px; }
+  .studio-lower .direction-identity strong { font-size: 12px; }
+  .studio-lower .direction-identity p { display: none; }
+  .studio-lower .clappy-orb { width: 28px; height: 28px; }
+  .studio-lower .direction-mode button { min-height: 29px; padding-inline: 9px; font-size: 9px; }
+  .studio-lower .preset-list { gap: 12px; margin-top: 9px; }
+  .studio-lower .preset-list button { padding: 2px 0 7px; }
+  .studio-lower .preset-list button strong { font-size: 9px; }
+  .studio-lower .preset-list button span { display: none; }
+  .studio-lower .live-direction { grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-top: 9px; }
+  .studio-lower .live-direction label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .studio-lower .live-direction input { min-height: 35px; height: 35px; padding-inline: 10px; font-size: 10px; }
+  .studio-lower .live-direction .secondary { min-height: 35px; padding: 7px 10px; font-size: 9px; }
+  .studio-lower .direction-status { display: none; }
+  .studio-lower .director-fingerprint {
+    display: grid;
+    min-height: 22px;
+    grid-template-columns: auto minmax(0,1fr) auto;
+    gap: 7px;
+    margin: 4px 0 0;
+    padding: 3px 0 0;
+    border: 0;
+  }
+  .studio-lower .director-fingerprint > svg { width: 13px; height: 13px; }
+  .studio-lower .director-fingerprint strong { font-size: 9px; }
+  .studio-lower .director-fingerprint span { display: none; }
+  .studio-lower .director-fingerprint small,
+  .studio-lower .director-fingerprint .text-button { font-size: 8px; }
+  .shoot-workspace > .transport { height: 56px; min-height: 56px; margin: 0; padding: 8px 14px 8px 72px; }
+  .shoot-workspace .roll-button { min-height: 40px; padding-block: 8px; font-size: 12px; }
+  .workspace > footer { min-height: 16px; margin-top: 3px; line-height: 1.4; }
+  .workspace > .review-layout { min-height: 0; flex: 1; overflow-y: auto; }
+}
+
+@media (max-width: 959px), (max-height: 759px) {
+  .studio-lower { display: contents; }
+  .shoot-workspace { display: contents; }
+  .director-assistant { left: 62px; bottom: 12px; }
+  .director-popover { width: min(390px, calc(100vw - 78px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-popover { animation: none; }
+}
