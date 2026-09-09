@@ -1,4 +1,5 @@
 export type CameraId = "a" | "b" | "c";
+export type DirectingPreset = "classic" | "reaction" | "patient" | "tension";
 export type Camera = {
   id: CameraId;
   name: string;
@@ -51,6 +52,9 @@ export type Session = {
   agent?: { status: string; message: string; edit_id?: string };
   source_set?: "charts" | "last-train-v1" | "last-train-animatic-v1";
   auto_enabled?: boolean;
+  directing_preset?: DirectingPreset;
+  live_direction?: string;
+  direction_epoch?: number;
   queued_direction?: {status:string; character:string; camera:CameraId; target_line_id:number; note:string};
   performance?: { status: string; text: string; line?: {id:number; character:string; confidence:number} };
 };

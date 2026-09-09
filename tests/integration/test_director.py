@@ -4,7 +4,9 @@ import pytest
 
 from services.api.agent.director import coverage_requirements, validate_proposal
 from services.api.agent.director import generation_config, LiveProposal
+from services.api.agent.styles import DIRECTING_PRESETS, directing_style
 from google.adk.agents import Agent
+from services.api.agent.voice import VoiceIntent
 
 
 def test_exact_percentage_requirement_rounds_up_to_frames():
@@ -40,3 +42,18 @@ def test_live_schema_uses_adk_agent_field_not_generation_config():
     assert agent.output_schema is LiveProposal
     assert agent.generate_content_config.response_schema is None
     assert agent.generate_content_config.max_output_tokens == 512
+
+
+def test_directing_presets_are_bounded_and_fall_back_safely():
+    assert set(DIRECTING_PRESETS) == {"classic", "reaction", "patient", "tension"}
+    assert DIRECTING_PRESETS["tension"]["minimum_hold"] < DIRECTING_PRESETS["patient"]["minimum_hold"]
+    assert directing_style({"directing_preset": "reaction"})[0] == "reaction"
+    key, style = directing_style({"directing_preset": "unknown"})
+    assert key == "classic"
+    assert style == DIRECTING_PRESETS["classic"]
+
+
+def test_voice_can_carry_a_creative_live_direction():
+    intent = VoiceIntent(kind="direct", preset="tension", explanation="Use the rising tension preset")
+    assert intent.kind == "direct"
+    assert intent.preset == "tension"

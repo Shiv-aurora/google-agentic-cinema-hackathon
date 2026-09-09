@@ -90,7 +90,8 @@ class Store:
                "script": SCRIPT, "cameras": [{**cam, "state": "OFFLINE"} for cam in CAMERAS],
                "takes": [], "active_take": None, "selected_camera": "c", "hold": False,
                "policy": "Balanced", "note": "Your crew is ready to assemble.", "error": None}
-        doc.update(source_set="charts", auto_enabled=False, control_epoch=0)
+        doc.update(source_set="charts", auto_enabled=False, control_epoch=0,
+                   directing_preset="classic", live_direction="", direction_epoch=0)
         with self.db:
             self.db.execute("INSERT INTO sessions VALUES(?,?,?)", (session_id, hashlib.sha256(token.encode()).hexdigest(), json.dumps(doc)))
         self.save(doc, "session.created", {"cameras": doc["cameras"], "script": doc["script"], "title": doc["title"]})

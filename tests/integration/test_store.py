@@ -30,6 +30,14 @@ def test_sessions_do_not_share_keys(tmp_path):
     assert not store.authorize(b["id"], token_a)
 
 
+def test_new_session_has_an_editable_directing_approach(tmp_path):
+    doc, _ = Store(tmp_path / "state.sqlite").create()
+    assert doc["directing_preset"] == "classic"
+    assert doc["live_direction"] == ""
+    assert doc["direction_epoch"] == 0
+    assert doc["auto_enabled"] is False
+
+
 def test_restart_expires_controls_and_marks_unfinished_work(tmp_path):
     store = Store(tmp_path / "state.sqlite")
     doc, _ = store.create()

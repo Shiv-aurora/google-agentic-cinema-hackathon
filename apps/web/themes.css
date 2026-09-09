@@ -201,11 +201,34 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .camera-card.selected .camera-select { background: var(--soft-accent); }
 .camera-card.selected .camera-card-header { color: var(--accent); }
 .direction-bar { background: transparent; border: 0; border-radius: 0; padding: 24px 0; }
+.direction-studio { margin-top: 32px; padding: 30px 0 18px; border-top: 1px solid var(--line); }
+.direction-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.direction-identity { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.direction-identity strong { display: block; color: var(--text); font: 600 15px 'Manrope Variable', Manrope, sans-serif; }
+.direction-identity p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.direction-mode { display: flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--control); flex-shrink: 0; }
+.direction-mode button { min-height: 36px; padding: 0 13px; border-radius: 8px; color: var(--muted); font-size: 11px; }
+.direction-mode button.selected { color: var(--on-accent); background: var(--accent); }
+.preset-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 24px; margin-top: 24px; }
+.preset-list button { position: relative; min-width: 0; padding: 4px 0 15px; text-align: left; color: var(--muted); border-bottom: 1px solid var(--line); }
+.preset-list button::after { content: ''; position: absolute; left: 0; right: 100%; bottom: -1px; height: 2px; background: var(--accent); transition: right 160ms ease; }
+.preset-list button:hover::after, .preset-list button.selected::after { right: 0; }
+.preset-list button strong { display: block; color: var(--text); font-size: 12px; font-weight: 600; }
+.preset-list button span { display: block; margin-top: 5px; font-size: 10px; }
+.preset-list button.selected span, .preset-list button.selected strong { color: var(--accent); }
+.live-direction { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; margin-top: 24px; }
+.live-direction label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+.live-direction input { width: 100%; min-width: 0; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); }
+.live-direction input:focus-visible { border-color: var(--accent-line); }
+.direction-status { display: flex; align-items: center; gap: 14px; min-height: 36px; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.direction-status .active-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.direction-status .text-button { margin-left: auto; flex-shrink: 0; }
 .agent-note { background: transparent; border: 0; padding: 24px 0; }
 .transport { position: static; width: auto; margin: 12px 0 32px; border: 0; border-radius: 12px; box-shadow: none; background: var(--soft-accent); }
 @media (max-width: 850px) {
   .shoot-grid { gap: 24px; }
   .script-panel { padding-left: 0; }
+  .preset-list { gap: 14px; }
 }
 @media (max-width: 580px) {
   .topbar { height: 64px; }
@@ -213,4 +236,15 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .workspace-tabs { margin-top: 24px; margin-bottom: 16px; }
   .camera-grid { gap: 20px; }
   .direction-bar > .secondary { margin-left: 0; }
+  .direction-studio { margin-top: 24px; padding-top: 24px; }
+  .direction-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .direction-mode { width: 100%; }
+  .direction-mode button { flex: 1; }
+  .preset-list { display: flex; overflow-x: auto; margin-top: 20px; padding-bottom: 4px; scrollbar-width: thin; }
+  .preset-list button { flex: 0 0 145px; }
+  .live-direction { grid-template-columns: 1fr; }
+  .live-direction .secondary { min-height: 44px; }
+  .direction-status { align-items: flex-start; flex-wrap: wrap; }
+  .direction-status .active-note { order: 3; width: 100%; white-space: normal; }
+  .direction-status .text-button { margin-left: auto; }
 }

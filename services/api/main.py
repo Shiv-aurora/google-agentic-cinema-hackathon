@@ -19,6 +19,7 @@ from services.api.agent.director import Director
 from services.api.agent.script import ScriptFollower, script_lines
 from services.api.agent.speech import ffmpeg_pcm, recognize_stream
 from services.api.agent.voice import transcribe_direction, interpret_direction
+from services.api.agent.styles import DIRECTING_PRESETS, directing_style
 from services.media.hub import MediaHub, recording_coverage
 from services.worker.editor import Segment, make_timeline, render_timeline
 from services.worker.alignment import inspect_take
@@ -148,8 +149,10 @@ def apply_queued(doc):
 
 class Command(BaseModel):
     id: str = Field(min_length=8, max_length=100)
-    kind: Literal["arm", "roll", "cut", "switch", "hold", "release", "auto_on", "auto_off"]
+    kind: Literal["arm", "roll", "cut", "switch", "hold", "release", "auto_on", "auto_off", "direct"]
     camera: Literal["a", "b", "c"] | None = None
+    preset: Literal["classic", "reaction", "patient", "tension"] | None = None
+    direction: str | None = Field(default=None, max_length=300)
     expected_revision: int = Field(ge=0)
 
 
@@ -563,15 +566,20 @@ async def live_policy_loop(session_id, take_id):
         line_event = performance.get("line_event_id")
         if not snapshot.get("auto_enabled") or snapshot["hold"] or time.monotonic() < snapshot.get("override_until", 0):
             continue
-        if not line_event or line_event in processed:
+        decision_key = (line_event, snapshot.get("direction_epoch", 0))
+        if not line_event or decision_key in processed:
             continue
         take = active_take(snapshot)
-        if time.monotonic()-take["start_monotonic"]-take["decisions"][-1]["time"] < 2.5:
+        preset_key, preset = directing_style(snapshot)
+        if time.monotonic()-take["start_monotonic"]-take["decisions"][-1]["time"] < preset["minimum_hold"]:
             continue
-        processed.add(line_event)
+        processed.add(decision_key)
         started = time.monotonic()
         try:
-            result = await director.ask(snapshot, "Choose a shot for the currently recognized screenplay line, using recent coverage and director notes.", live=True)
+            live_note = snapshot.get("live_direction", "").strip()
+            instruction = (f"Choose a shot using the {preset['name']} preset: {preset['prompt']} "
+                           f"Persistent live direction: {live_note or 'none'}. Use the current recognized line and recent coverage.")
+            result = await director.ask(snapshot, instruction, live=True)
             async with locks.setdefault(session_id, asyncio.Lock()):
                 doc = store.get(session_id)
                 if doc["state"] != "RECORDING" or doc["active_take"] != take_id:
@@ -698,6 +706,17 @@ async def command(session_id: str, body: Command, request: Request):
                     raise ValueError("Select the dialogue rehearsal sources in Scene settings first")
                 doc["auto_enabled"] = body.kind == "auto_on"
                 doc["note"] = "Gemini will direct from actual recognized dialogue." if doc["auto_enabled"] else "Manual direction."
+            elif body.kind == "direct":
+                if body.preset is None and body.direction is None:
+                    raise ValueError("Choose a directing preset or enter a live direction")
+                if body.preset is not None:
+                    doc["directing_preset"] = body.preset
+                if body.direction is not None:
+                    doc["live_direction"] = body.direction.strip()
+                doc["direction_epoch"] = doc.get("direction_epoch", 0)+1
+                preset_name = DIRECTING_PRESETS[doc.get("directing_preset", "classic")]["name"]
+                doc["note"] = (f"{preset_name}. {doc['live_direction']}" if doc.get("live_direction")
+                               else f"{preset_name} selected.")
             else:
                 doc["hold"] = False
                 doc["note"] = "Hold released."
@@ -708,7 +727,8 @@ async def command(session_id: str, body: Command, request: Request):
                 doc["override_until"] = 0
                 if apply_queued(doc):
                     store.save(doc, "direction.queue.applied", dict(doc["queued_direction"]))
-            store.save(doc, f"command.{body.kind}.applied", {"command_id": body.id, "camera": body.camera, "take_id": doc["active_take"]})
+            store.save(doc, f"command.{body.kind}.applied", {"command_id": body.id, "camera": body.camera,
+                       "preset": body.preset, "direction": body.direction, "take_id": doc["active_take"]})
             result = {"session": doc, "command_id": body.id, "status": "applied"}
             store.complete(session_id, body.id, result)
             await broadcast(session_id)
@@ -793,6 +813,7 @@ async def voice_direction(session_id: str, request: Request, audio: UploadFile =
                 result = {"session": current, "action": "review"}
             else:
                 result = await command(session_id, Command(id=id+"-control", kind=intent.kind, camera=intent.camera,
+                    preset=intent.preset, direction=transcript if intent.kind == "direct" else None,
                     expected_revision=current["revision"]), request)
                 if intent.kind == "cut":
                     result["action"] = "review"

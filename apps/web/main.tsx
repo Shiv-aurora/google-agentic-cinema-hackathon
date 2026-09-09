@@ -23,7 +23,7 @@ import {
   Wifi,
   X,
 } from "lucide-react";
-import type { Camera, CameraId, Edit, Health, Session, Take } from "./types";
+import type { Camera, CameraId, DirectingPreset, Edit, Health, Session, Take } from "./types";
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/manrope";
 import "./style.css";
@@ -43,6 +43,13 @@ function clock(seconds = 0) {
   const n = Math.max(0, Math.floor(seconds));
   return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
 }
+
+const directingPresets: {id: DirectingPreset; name: string; short: string; description: string}[] = [
+  {id: "classic", name: "Classic coverage", short: "Balanced dialogue", description: "Establish wide, then use clear shot-reverse-shot coverage."},
+  {id: "reaction", name: "Reaction first", short: "Listener-led", description: "Let the listener carry the emotional turns."},
+  {id: "patient", name: "Wide and patient", short: "Long master shots", description: "Prefer the two-shot and cut only for a meaningful beat."},
+  {id: "tension", name: "Rising tension", short: "Tightening pace", description: "Begin composed, then move closer as the exchange develops."},
+];
 
 function App() {
   const [theme, setTheme] = useState<'light'|'dark'>(() => {
@@ -187,7 +194,7 @@ function App() {
     };
   }, [credentials, accept]);
 
-  const command = async (kind: string, camera?: CameraId) => {
+  const command = async (kind: string, camera?: CameraId, options: {preset?:DirectingPreset;direction?:string} = {}) => {
     if (!session) return;
     setBusy(true);
     setError("");
@@ -198,6 +205,7 @@ function App() {
           id: crypto.randomUUID(),
           kind,
           camera,
+          ...options,
           expected_revision: session.revision,
         }),
       });
@@ -510,23 +518,8 @@ function App() {
                     />
                   ))}
                 </div>
-                <div className="direction-bar">
-                  <div className="clappy-orb">
-                    <Clapperboard size={19} />
-                  </div>
-                  <div>
-                    <strong>{session.note}</strong>
-                    <p>
-                      {session.auto_enabled?'Google speech → Gemini + ClickHouse · Manual hold takes priority.':'Manual live switching · Enable AI for the dialogue rehearsal.'}
-                    </p>
-                  </div>
-                  <button className="text-button" onClick={inspect}>
-                    Production log <ArrowRight size={15} />
-                  </button>
-                  <button className="secondary" disabled={busy||transitioning||!session.source_set||session.source_set==='charts'} onClick={()=>command(session.auto_enabled?'auto_off':'auto_on')}>
-                    {session.auto_enabled?'AI director on':'Enable AI director'}
-                  </button>
-                </div>
+                <DirectionStudio session={session} busy={busy} transitioning={transitioning}
+                  onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
                 <div className="transport">
                   <div className="take-counter">
                     <span>SCENE</span>
@@ -730,6 +723,57 @@ function Stream({ camera, path, frameRef, preview, sessionId }: { camera: Camera
       allow="autoplay; fullscreen"
     />
   );
+}
+
+function DirectionStudio({session,busy,transitioning,onCommand,onInspect}:{
+  session:Session;
+  busy:boolean;
+  transitioning:boolean;
+  onCommand:(kind:string,options?:{preset?:DirectingPreset;direction?:string})=>Promise<void>;
+  onInspect:()=>Promise<void>;
+}) {
+  const [direction,setDirection]=useState(session.live_direction||"");
+  useEffect(()=>setDirection(session.live_direction||""),[session.live_direction]);
+  const active=directingPresets.find(item=>item.id===(session.directing_preset||"classic"))||directingPresets[0];
+  const canUseAI=!!session.source_set&&session.source_set!=="charts";
+  return <section className="direction-studio" aria-label="Directing approach">
+    <div className="direction-heading">
+      <div className="direction-identity">
+        <span className="clappy-orb"><Clapperboard size={18}/></span>
+        <div><strong>How should this scene be directed?</strong><p>{active.description}</p></div>
+      </div>
+      <div className="direction-mode" aria-label="Direction mode">
+        <button className={!session.auto_enabled?"selected":""} aria-pressed={!session.auto_enabled}
+          disabled={busy||transitioning} onClick={()=>onCommand("auto_off")}>You direct</button>
+        <button className={session.auto_enabled?"selected":""} aria-pressed={!!session.auto_enabled}
+          disabled={busy||transitioning||!canUseAI} title={!canUseAI?"Choose a dialogue source in Scene settings":""}
+          onClick={()=>onCommand("auto_on")}>Clappy directs</button>
+      </div>
+    </div>
+    <div className="preset-list" aria-label="Camera-work preset">
+      {directingPresets.map(item=><button key={item.id} className={item.id===active.id?"selected":""}
+        aria-pressed={item.id===active.id} disabled={busy||transitioning}
+        onClick={()=>onCommand("direct",{preset:item.id})}>
+        <strong>{item.name}</strong><span>{item.short}</span>
+      </button>)}
+    </div>
+    <form className="live-direction" onSubmit={async event=>{
+      event.preventDefault();
+      await onCommand("direct",{direction:direction.trim()});
+    }}>
+      <label htmlFor="live-direction">Live direction</label>
+      <input id="live-direction" value={direction} maxLength={300} minLength={3}
+        onChange={event=>setDirection(event.target.value)}
+        placeholder="Stay wide until the reveal, then favor Bella's reaction."
+        disabled={busy||transitioning}/>
+      <button className="secondary" disabled={busy||transitioning||direction.trim().length<3}>Set direction</button>
+    </form>
+    <div className="direction-status">
+      <span>{session.auto_enabled?"Following dialogue with Gemini + ClickHouse":"Manual switching is live"}</span>
+      {session.live_direction&&<span className="active-note">Direction: {session.live_direction}</span>}
+      <button className="text-button" onClick={onInspect}>Production log <ArrowRight size={14}/></button>
+    </div>
+  </section>;
 }
 
 function CameraCard({

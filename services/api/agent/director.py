@@ -19,6 +19,7 @@ from services.api.config import MODEL, DIRECTOR_LIVE_MODEL, PROJECT, google_clie
 from services.worker.editor import Segment, validate_segments
 from services.api.agent.script import script_lines
 from services.api.agent.context import take_context
+from services.api.agent.styles import directing_style
 
 
 class ProposedShot(BaseModel):
@@ -150,11 +151,14 @@ class Director:
                 await sessions.create_session(app_name="clappy", user_id=doc["id"], session_id=run_id)
                 runner = Runner(agent=agent, app_name="clappy", session_service=sessions)
                 take = next((t for t in doc["takes"] if t["id"] == doc["active_take"]), None)
+                preset_key, preset = directing_style(doc)
                 snapshot = {"title": doc["title"], "script": doc["script"], "revision": doc["revision"],
                     "state": doc["state"], "cameras": doc["cameras"], "take": take_context(take),
                     "watermark": self.memory.watermark(doc["id"]), "performance": doc.get("performance"),
                     "source_set": doc.get("source_set", "charts"),
-                    "script_lines": script_lines(doc["script"]), "selected_camera": doc["selected_camera"]}
+                    "script_lines": script_lines(doc["script"]), "selected_camera": doc["selected_camera"],
+                    "directing_style": {"id": preset_key, **preset},
+                    "live_direction": doc.get("live_direction", "")}
                 if take and take.get("duration"):
                     snapshot["take_frame_count"] = round(take["duration"] * 30)
                 requirements = coverage_requirements(instruction, snapshot.get("take_frame_count", 0)) if edit else {}
