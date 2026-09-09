@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
+  Brain,
   Check,
   ChevronDown,
   Clapperboard,
@@ -13,6 +14,7 @@ import {
   Maximize2,
   Moon,
   Radio,
+  Sparkles,
   Settings2,
   ShieldCheck,
   Square,
@@ -50,6 +52,39 @@ const directingPresets: {id: DirectingPreset; name: string; short: string; descr
   {id: "patient", name: "Wide and patient", short: "Long master shots", description: "Prefer the two-shot and cut only for a meaningful beat."},
   {id: "tension", name: "Rising tension", short: "Tightening pace", description: "Begin composed, then move closer as the exchange develops."},
 ];
+
+const styleLabBriefs = [
+  {id: "reaction", name: "Reaction first", note: "[STYLE LAB: reaction] Recut this performance as an intimate, listener-led film. Favor the emotional reaction after consequential lines and use patient close-ups."},
+  {id: "tension", name: "Rising tension", note: "[STYLE LAB: tension] Recut this same performance with escalating tension. Begin composed and wide, then progressively tighten the coverage and pace."},
+] as const;
+
+function directorFingerprint(session: Session) {
+  const samples: {camera: CameraId; duration: number}[] = [];
+  let manualCuts = 0;
+  for (const take of session.takes) {
+    const decisions = take.decisions || [];
+    decisions.forEach((decision, index) => {
+      if (decision.source === "gemini" || decision.source === "queued-director" || decision.source === "safety-fallback") return;
+      if (index > 0 || decision.reason === "Manual director selection") manualCuts += 1;
+      const end = decisions[index + 1]?.time ?? take.duration ?? decision.time;
+      if (end > decision.time) samples.push({camera: decision.camera, duration: end - decision.time});
+    });
+  }
+  if (manualCuts < 2 || samples.length < 2) return null;
+  const total = samples.reduce((sum, shot) => sum + shot.duration, 0) || 1;
+  const wide = samples.filter((shot) => shot.camera === "c").reduce((sum, shot) => sum + shot.duration, 0) / total;
+  const tom = samples.filter((shot) => shot.camera === "a").reduce((sum, shot) => sum + shot.duration, 0);
+  const bella = samples.filter((shot) => shot.camera === "b").reduce((sum, shot) => sum + shot.duration, 0);
+  const average = total / samples.length;
+  const framing = wide > .48 ? "patient master shots" : wide < .22 ? "intimate close coverage" : "balanced coverage";
+  const rhythm = average < 3.2 ? "quick, decisive cuts" : average > 5.5 ? "measured holds" : "a natural dialogue rhythm";
+  const subject = bella > tom * 1.25 ? " and lean toward Bella's reactions" : tom > bella * 1.25 ? " and lean toward Tom's reactions" : "";
+  return {
+    summary: `You favor ${framing}, ${rhythm}${subject}.`,
+    instruction: `Direct in my learned style: favor ${framing}, use ${rhythm}${subject}. Preserve meaningful reactions and avoid mechanical cutting.`,
+    manualCuts,
+  };
+}
 
 function App() {
   const [theme, setTheme] = useState<'light'|'dark'>(() => {
@@ -242,6 +277,45 @@ function App() {
       setError((exc as Error).message);
     }
   };
+  const createStyleLab = async (
+    takeId: string,
+    onProgress: (completed: number, total: number) => void,
+  ) => {
+    if (!session) return;
+    const total = styleLabBriefs.length;
+    let completed = 0;
+    for (const style of styleLabBriefs) {
+      let current = (await api(`/api/sessions/${session.id}`)) as Session;
+      const currentTake = current.takes.find((item) => item.id === takeId);
+      if (currentTake?.edits.some((item) => item.brief?.includes(`[STYLE LAB: ${style.id}]`))) {
+        completed += 1;
+        onProgress(completed, total);
+        continue;
+      }
+      const priorCount = currentTake?.edits.length || 0;
+      const accepted = await api(`/api/sessions/${session.id}/direction`, {
+        method: "POST",
+        body: JSON.stringify({
+          id: crypto.randomUUID(),
+          note: style.note,
+          kind: "edit",
+          take_id: takeId,
+        }),
+      });
+      accept(accepted.session);
+      for (let attempt = 0; attempt < 75; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        current = await api(`/api/sessions/${session.id}`) as Session;
+        accept(current);
+        const updatedTake = current.takes.find((item) => item.id === takeId);
+        if (current.agent?.status === "FAILED") throw new Error(current.agent.message);
+        if ((updatedTake?.edits.length || 0) > priorCount && current.agent?.status !== "THINKING") break;
+        if (attempt === 74) throw new Error("Clappy is taking longer than expected to create the comparison.");
+      }
+      completed += 1;
+      onProgress(completed, total);
+    }
+  };
   const voice = async(audio:Blob)=>{
     if(!session||!auth.current)throw new Error('Connect to your production first.');
     const form=new FormData();form.append('id',crypto.randomUUID());form.append('take_id',session.active_take||'');form.append('audio',audio,'direction.webm');
@@ -413,6 +487,9 @@ function App() {
                         </span>
                         <Maximize2 size={16} />
                       </div>
+                      {rolling && take?.decisions?.length ? (
+                        <DecisionHud session={session} take={take} />
+                      ) : null}
                       {!rolling && (
                         <div className="standby-message">
                           <Focus size={35} />
@@ -592,6 +669,7 @@ function App() {
               <Review
                 session={session}
                 onDirect={(note, takeId) => direct(note, "edit", takeId)}
+                onCreateStyleLab={createStyleLab}
               />
             )
           ) : needsInvite ? (
@@ -699,6 +777,27 @@ function App() {
   );
 }
 
+function DecisionHud({session,take}:{session:Session;take:Take}) {
+  const decision = take.decisions?.at(-1);
+  if (!decision) return null;
+  const source = decision.source === "gemini"
+    ? "Clappy · Gemini"
+    : decision.source === "queued-director"
+      ? "Your direction"
+      : decision.source === "safety-fallback"
+        ? "Continuity safeguard"
+        : decision.reason === "Opening shot"
+          ? "Opening composition"
+          : "You directed";
+  const camera = session.cameras.find((item) => item.id === decision.camera);
+  return <div className="decision-hud" key={`${decision.time}-${decision.camera}`} role="status" aria-live="polite">
+    <span className="decision-signal"><Sparkles size={13}/>{source}</span>
+    <strong>{camera?.role || `Camera ${decision.camera.toUpperCase()}`}</strong>
+    <p>{decision.reason}</p>
+    {session.live_direction ? <small>Following: {session.live_direction}</small> : null}
+  </div>;
+}
+
 function Stream({ camera, path, frameRef, preview, sessionId }: { camera: Camera; sessionId:string; path?: string; preview?:string; frameRef?:React.RefObject<HTMLIFrameElement|null> }) {
   if(path&&camera.state!=='RECORDING')return <div className="empty-stream" role="status"><span>{camera.role} unavailable</span><small>Live connection interrupted</small></div>;
   if(!path&&preview)return <img className="source-preview" src={preview} alt={`${camera.role} — synthetic animatic preview`}/>;
@@ -736,6 +835,7 @@ function DirectionStudio({session,busy,transitioning,onCommand,onInspect}:{
   useEffect(()=>setDirection(session.live_direction||""),[session.live_direction]);
   const active=directingPresets.find(item=>item.id===(session.directing_preset||"classic"))||directingPresets[0];
   const canUseAI=!!session.source_set&&session.source_set!=="charts";
+  const fingerprint=directorFingerprint(session);
   return <section className="direction-studio" aria-label="Directing approach">
     <div className="direction-heading">
       <div className="direction-identity">
@@ -772,6 +872,15 @@ function DirectionStudio({session,busy,transitioning,onCommand,onInspect}:{
       <span>{session.auto_enabled?"Following dialogue with Gemini + ClickHouse":"Manual switching is live"}</span>
       {session.live_direction&&<span className="active-note">Direction: {session.live_direction}</span>}
       <button className="text-button" onClick={onInspect}>Production log <ArrowRight size={14}/></button>
+    </div>
+    <div className={`director-fingerprint ${fingerprint ? "learned" : "learning"}`}>
+      <Brain size={17}/>
+      <div>
+        <strong>Director fingerprint</strong>
+        <span>{fingerprint?.summary || "Make two manual cuts and Clappy will begin learning your visual rhythm."}</span>
+      </div>
+      {fingerprint ? <button className="text-button" disabled={busy||transitioning}
+        onClick={()=>onCommand("direct",{direction:fingerprint.instruction})}>Use my style <ArrowRight size={13}/></button> : <small>LEARNING</small>}
     </div>
   </section>;
 }
@@ -867,9 +976,11 @@ function CameraCard({
 function Review({
   session,
   onDirect,
+  onCreateStyleLab,
 }: {
   session: Session;
   onDirect: (note: string, takeId: string) => Promise<void>;
+  onCreateStyleLab: (takeId: string, onProgress: (completed: number, total: number) => void) => Promise<void>;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const take =
@@ -878,6 +989,9 @@ function Review({
   const player = useRef<HTMLVideoElement|null>(null);
   const takeList = useRef<HTMLElement|null>(null);
   const resume = useRef({time:0,playing:false});
+  const [labRunning,setLabRunning]=useState(false);
+  const [labProgress,setLabProgress]=useState(0);
+  const [labError,setLabError]=useState("");
   const edit = take?.edits.find((e) => e.id === editId) || take?.edits[0];
   const base = edit ? `/api/sessions/${session.id}/edits/${edit.id}` : "";
   const allocation=(version:Edit|undefined,camera:CameraId)=>version&&take?.duration?100*version.segments.filter(s=>s.camera===camera).reduce((n,s)=>n+s.end-s.start,0)/take.duration:0;
@@ -888,6 +1002,9 @@ function Review({
       list.scrollLeft = selectedTake.offsetLeft - list.offsetLeft;
     }
   }, [take?.id]);
+  useEffect(() => {
+    if (session.agent?.status === "READY" && session.agent.edit_id) setEditId(session.agent.edit_id);
+  }, [session.agent?.status, session.agent?.edit_id]);
   if (!take)
     return (
       <div className="empty-review">
@@ -951,6 +1068,31 @@ function Review({
             </div>
           )}
         </div>
+        <div className="cut-lab" aria-label="Director's Cut Lab">
+          <div className="cut-lab-intro">
+            <span className="clappy-orb"><Sparkles size={17}/></span>
+            <div><strong>One performance. Three films.</strong><p>Compare how directing intent changes the exact same source footage.</p></div>
+          </div>
+          <div className="cut-versions">
+            <button className={edit?.id===take.edits[0]?.id?"selected":""} onClick={()=>setEditId(take.edits[0]?.id || null)}>
+              <span>01</span><strong>Live cut</strong><small>As directed on set</small>
+            </button>
+            {styleLabBriefs.map((style,index)=>{
+              const version=take.edits.find(item=>item.brief?.includes(`[STYLE LAB: ${style.id}]`));
+              return <button key={style.id} disabled={!version} className={version?.id===edit?.id?"selected":""}
+                onClick={()=>version&&setEditId(version.id)}>
+                <span>0{index+2}</span><strong>{style.name}</strong><small>{version ? version.status === "READY" ? "Ready to compare" : "Rendering film" : labRunning ? "Clappy is directing" : "Awaiting interpretation"}</small>
+              </button>;
+            })}
+          </div>
+          <div className="cut-lab-action">
+            <span>{labError || (labRunning ? `Creating interpretation ${Math.min(labProgress+1,styleLabBriefs.length)} of ${styleLabBriefs.length}…` : take.edits.filter(item=>item.brief?.includes("[STYLE LAB:")).length >= styleLabBriefs.length ? "All three interpretations use the same preserved originals." : "Gemini directs two alternate versions from the preserved originals.")}</span>
+            <button className="primary" disabled={labRunning||take.edits.filter(item=>item.brief?.includes("[STYLE LAB:")).length>=styleLabBriefs.length}
+              onClick={async()=>{setLabRunning(true);setLabError("");setLabProgress(0);try{await onCreateStyleLab(take.id,(done)=>setLabProgress(done));}catch(exc){setLabError((exc as Error).message);}finally{setLabRunning(false);}}}>
+              {labRunning?<LoaderCircle size={15} className="spin"/>:<Sparkles size={15}/>} {labRunning?"Directing…":"Create three cuts"}
+            </button>
+          </div>
+        </div>
         {edit && (
           <>
             <div className="timeline">
@@ -980,6 +1122,9 @@ function Review({
                   : "Recording coverage incomplete"}
               </span>
               <span>{edit.sync}</span>
+            </div>
+            <div className="edit-rationale">
+              <Sparkles size={15}/><strong>Why this cut</strong><span>{edit.explanation || edit.segments[0]?.reason}</span>
             </div>
             <div className="edit-actions">
               <div>

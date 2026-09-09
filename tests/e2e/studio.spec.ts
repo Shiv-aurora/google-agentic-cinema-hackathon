@@ -19,10 +19,15 @@ test('real cameras roll, stream, switch, stop and produce reviewable video', asy
   await page.screenshot({path:'artifacts/studio-live.png',fullPage:true});
   await page.getByRole('button',{name:'Cut to Tom',exact:true}).click();
   await expect(page.locator('.program-overlay')).toContainText('Tom');
+  await expect(page.locator('.decision-hud')).toContainText('You directed');
+  await expect(page.locator('.decision-hud')).toContainText('Manual director selection');
   await page.getByRole('button',{name:'Cut to Bella',exact:true}).click();
   await expect(page.locator('.program-overlay')).toContainText('Bella');
+  await expect(page.getByRole('button',{name:/Use my style/})).toBeVisible();
   await page.getByRole('button',{name:'Cut',exact:true}).click();
   await expect(page.locator('.review-player video')).toBeVisible({timeout:30000});
+  await expect(page.getByText('One performance. Three films.')).toBeVisible();
+  await expect(page.getByRole('button',{name:/Create three cuts/})).toBeVisible();
   await expect(page.getByText('3 independent recordings verified')).toBeVisible();
   await expect(page.getByRole('link',{name:'OTIO timeline'})).toBeVisible();
   await page.locator('.review-player video').evaluate((v:HTMLVideoElement)=>v.play());

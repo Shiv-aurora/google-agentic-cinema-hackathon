@@ -852,6 +852,7 @@ async def direct_job(snapshot, body):
                 (DATA / "edits").mkdir(exist_ok=True)
                 otio.adapters.write_to_file(timeline, str(DATA / "edits" / f"{edit_id}.otio"))
                 take["edits"].append({"id": edit_id, "parent_id": take["edits"][0]["id"], "name": proposal["name"],
+                    "brief": body.note,
                     "status": "RENDERING", "segments": proposal["segments"], "explanation": proposal["explanation"],
                     "source": "Fixture originals", "sync": "Clock estimate — not frame-verified", "model": result["model"]})
                 doc["agent"] = {"status": "READY", "message": proposal["explanation"], "edit_id": edit_id}

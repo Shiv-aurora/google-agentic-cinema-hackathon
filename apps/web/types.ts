@@ -11,6 +11,8 @@ export type Camera = {
 export type Edit = {
   id: string;
   name: string;
+  brief?: string;
+  explanation?: string;
   status: string;
   error?: string;
   sync: string;
@@ -26,7 +28,7 @@ export type Take = {
   source_tag?: string;
   duration?: number;
   paths?: Record<CameraId, string>;
-  decisions?: { camera: CameraId; time: number; reason: string }[];
+  decisions?: { camera: CameraId; time: number; reason: string; source?: string; line_event_id?: number }[];
   edits: Edit[];
   recordings_verified?: boolean;
   recordings?: Record<
