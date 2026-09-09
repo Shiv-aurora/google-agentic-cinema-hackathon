@@ -565,6 +565,8 @@ function App() {
                       {session.performance?.status==='TRACKING'?`Google speech · ${session.performance.line?.character} · ${Math.round((session.performance.line?.confidence||0)*100)}% match`:session.performance?.status==='LISTENING'?'Listening to production audio':session.performance?.status==='FAILED'?'Speech needs attention':'Scene following awaits dialogue audio'}
                     </div>
                   </section>
+                  <DirectionStudio session={session} busy={busy} transitioning={transitioning}
+                    onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
                 </div>
                 <div className="studio-lower">
                   <div className="crew-dock">
@@ -594,12 +596,11 @@ function App() {
                             )
                           }
                           holding={session.hold && session.selected_camera === cam.id}
+                          rolling={rolling}
                         />
                       ))}
                     </div>
                   </div>
-                  <DirectionStudio session={session} busy={busy} transitioning={transitioning}
-                    onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
                 </div>
                 <div className="transport">
                   <div className="take-counter">
@@ -611,22 +612,10 @@ function App() {
                       {String(take?.number || 1).padStart(2, "0")}
                     </strong>
                   </div>
-                  <span className="transport-status">
-                    <span
-                      className={
-                        rolling
-                          ? "dot recording"
-                          : session.state === "ARMED"
-                            ? "dot online"
-                            : "dot"
-                      }
-                    />
-                    {session.state === "ARMED"
-                      ? "3 cameras ready"
-                      : rolling
-                        ? "Recording all cameras"
-                        : session.state.toLowerCase().replace("_", " ")}
-                  </span>
+                  <div className="transport-next" aria-live="polite">
+                    <strong>{rolling ? "Recording all three cameras" : session.state === "ARMED" ? "The crew is ready" : "Start your take"}</strong>
+                    <span>{rolling ? "Switch cameras above. Every angle is still being saved." : session.state === "ARMED" ? "Press Roll cameras when the actors are ready." : "Arm the cameras, then roll when you are ready."}</span>
+                  </div>
                   <button
                     className={`roll-button ${rolling ? "cut" : ""}`}
                     disabled={
@@ -742,7 +731,7 @@ function App() {
           <button className="director-fab" onClick={() => setDirectorOpen(value => !value)}
             aria-label={directorOpen ? "Close Clappy director" : "Talk to Clappy director"}
             aria-expanded={directorOpen} title="Talk to Clappy director">
-            <MessageCircle size={21}/>
+            <MessageCircle size={19}/><span>{directorOpen ? "Close" : "Ask Clappy"}</span>
           </button>
         </div>
       )}
@@ -861,36 +850,43 @@ function DirectionStudio({session,busy,transitioning,onCommand,onInspect}:{
     <div className="direction-heading">
       <div className="direction-identity">
         <span className="clappy-orb"><Clapperboard size={18}/></span>
-        <div><strong>How should this scene be directed?</strong><p>{active.description}</p></div>
-      </div>
-      <div className="direction-mode" aria-label="Direction mode">
-        <button className={!session.auto_enabled?"selected":""} aria-pressed={!session.auto_enabled}
-          disabled={busy||transitioning} onClick={()=>onCommand("auto_off")}>You direct</button>
-        <button className={session.auto_enabled?"selected":""} aria-pressed={!!session.auto_enabled}
-          disabled={busy||transitioning||!canUseAI} title={!canUseAI?"Choose a dialogue source in Scene settings":""}
-          onClick={()=>onCommand("auto_on")}>Clappy directs</button>
+        <div><strong>Directing plan</strong><p>Decide who calls each shot before you roll.</p></div>
       </div>
     </div>
-    <div className="preset-list" aria-label="Camera-work preset">
+    <div className="direction-control">
+      <span className="control-label">Who calls the shots?</span>
+      <div className="direction-mode" aria-label="Direction mode">
+        <button className={!session.auto_enabled?"selected":""} aria-pressed={!session.auto_enabled}
+          disabled={busy||transitioning} onClick={()=>onCommand("auto_off")}><strong>You direct</strong><span>Cut live</span></button>
+        <button className={session.auto_enabled?"selected":""} aria-pressed={!!session.auto_enabled}
+          disabled={busy||transitioning||!canUseAI} title={!canUseAI?"Choose a dialogue source in Scene settings":""}
+          onClick={()=>onCommand("auto_on")}><strong>Clappy directs</strong><span>Follows dialogue</span></button>
+      </div>
+      {!canUseAI && <p className="direction-help">Choose a dialogue scene in Scene settings to enable Clappy.</p>}
+    </div>
+    <div className="direction-control">
+      <span className="control-label">Camera style</span>
+      <div className="preset-list" aria-label="Camera-work preset">
       {directingPresets.map(item=><button key={item.id} className={item.id===active.id?"selected":""}
         aria-pressed={item.id===active.id} disabled={busy||transitioning}
         onClick={()=>onCommand("direct",{preset:item.id})}>
         <strong>{item.name}</strong><span>{item.short}</span>
       </button>)}
+      </div>
+      <p className="preset-description">{active.description}</p>
     </div>
     <form className="live-direction" onSubmit={async event=>{
       event.preventDefault();
       await onCommand("direct",{direction:direction.trim()});
     }}>
-      <label htmlFor="live-direction">Live direction</label>
+      <label htmlFor="live-direction">Add a direction <span>Optional</span></label>
       <input id="live-direction" value={direction} maxLength={300} minLength={3}
         onChange={event=>setDirection(event.target.value)}
-        placeholder="Stay wide until the reveal, then favor Bella's reaction."
+        placeholder="Example: Favor Bella after the reveal"
         disabled={busy||transitioning}/>
-      <button className="secondary" disabled={busy||transitioning||direction.trim().length<3}>Set direction</button>
+      <button className="secondary" disabled={busy||transitioning||direction.trim().length<3}>Apply note</button>
     </form>
     <div className="direction-status">
-      <span>{session.auto_enabled?"Following dialogue with Gemini + ClickHouse":"Manual switching is live"}</span>
       {session.live_direction&&<span className="active-note">Direction: {session.live_direction}</span>}
       <button className="text-button" onClick={onInspect}>Production log <ArrowRight size={14}/></button>
     </div>
@@ -915,6 +911,7 @@ function CameraCard({
   onSelect,
   onHold,
   holding,
+  rolling,
   disabled,
 }: {
   sessionId:string;
@@ -925,8 +922,10 @@ function CameraCard({
   onSelect: () => void;
   onHold: () => void;
   holding: boolean;
+  rolling: boolean;
   disabled: boolean;
 }) {
+  const stateLabel = camera.state === "RECORDING" ? "REC" : camera.state === "OFFLINE" ? "STANDBY" : camera.state;
   return (
     <article
       className={`camera-card ${selected ? "selected" : ""}`}
@@ -947,7 +946,7 @@ function CameraCard({
               <span className="dot recording" /> REC
             </>
           ) : (
-            camera.state
+            stateLabel
           )}
         </span>
       </div>
@@ -955,7 +954,7 @@ function CameraCard({
         className="camera-select"
         disabled={disabled}
         onClick={onSelect}
-        aria-label={`Cut to ${camera.role}`}
+        aria-label={rolling ? `Cut to ${camera.role}` : `Preview ${camera.role}`}
       >
         <div className="phone-frame">
           <div className="phone-island" />
@@ -977,18 +976,18 @@ function CameraCard({
         <span>
           {selected ? (
             <>
-              <span className="dot online" /> ON PROGRAM
+              <span className="dot online" /> {rolling ? "ON PROGRAM" : "SELECTED"}
             </>
           ) : (
             <>
-              <Wifi size={12} /> VIRTUAL SOURCE
+              <Wifi size={12} /> AVAILABLE
             </>
           )}
         </span>
-        <button disabled={disabled} onClick={onHold}>
-          {holding ? "Release hold" : "Hold shot"}
-          {holding ? <Check size={13} /> : <Focus size={13} />}
-        </button>
+        {rolling && <button disabled={disabled} onClick={onHold}>
+            {holding ? "Release hold" : "Hold shot"}
+            {holding ? <Check size={13} /> : <Focus size={13} />}
+          </button>}
       </div>
     </article>
   );

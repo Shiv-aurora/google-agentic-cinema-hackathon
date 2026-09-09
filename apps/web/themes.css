@@ -202,29 +202,40 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .camera-card.selected .camera-card-header { color: var(--accent); }
 .direction-bar { background: transparent; border: 0; border-radius: 0; padding: 24px 0; }
 .direction-studio { margin-top: 32px; padding: 30px 0 18px; border-top: 1px solid var(--line); }
-.direction-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.direction-heading { display: flex; align-items: center; gap: 24px; }
 .direction-identity { display: flex; align-items: center; gap: 13px; min-width: 0; }
 .direction-identity strong { display: block; color: var(--text); font: 600 15px 'Manrope Variable', Manrope, sans-serif; }
 .direction-identity p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-.direction-mode { display: flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--control); flex-shrink: 0; }
-.direction-mode button { min-height: 36px; padding: 0 13px; border-radius: 8px; color: var(--muted); font-size: 11px; }
+.direction-control { margin-top: 22px; }
+.control-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .75px; text-transform: uppercase; }
+.direction-mode { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); padding: 3px; gap: 3px; border-radius: 10px; background: var(--control); }
+.direction-mode button { min-height: 48px; padding: 7px 10px; border-radius: 8px; color: var(--muted); text-align: left; }
+.direction-mode button strong, .direction-mode button span { display: block; }
+.direction-mode button strong { font-size: 11px; font-weight: 600; }
+.direction-mode button span { margin-top: 2px; font-size: 9px; }
 .direction-mode button.selected { color: var(--on-accent); background: var(--accent); }
-.preset-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 24px; margin-top: 24px; }
-.preset-list button { position: relative; min-width: 0; padding: 4px 0 15px; text-align: left; color: var(--muted); border-bottom: 1px solid var(--line); }
-.preset-list button::after { content: ''; position: absolute; left: 0; right: 100%; bottom: -1px; height: 2px; background: var(--accent); transition: right 160ms ease; }
-.preset-list button:hover::after, .preset-list button.selected::after { right: 0; }
+.direction-help, .preset-description { margin: 8px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.preset-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.preset-list button { min-width: 0; min-height: 52px; padding: 8px 9px; text-align: left; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.preset-list button:hover:not(:disabled) { border-color: var(--accent-line); }
 .preset-list button strong { display: block; color: var(--text); font-size: 12px; font-weight: 600; }
-.preset-list button span { display: block; margin-top: 5px; font-size: 10px; }
+.preset-list button span { display: block; margin-top: 3px; font-size: 9px; }
+.preset-list button.selected { border-color: var(--accent); background: var(--soft-accent); }
 .preset-list button.selected span, .preset-list button.selected strong { color: var(--accent); }
-.live-direction { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; margin-top: 24px; }
-.live-direction label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+.live-direction { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 8px; margin-top: 22px; }
+.live-direction label { grid-column: 1/-1; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .75px; text-transform: uppercase; }
+.live-direction label span { margin-left: 5px; font-weight: 400; letter-spacing: 0; text-transform: none; }
 .live-direction input { width: 100%; min-width: 0; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); }
 .live-direction input:focus-visible { border-color: var(--accent-line); }
-.direction-status { display: flex; align-items: center; gap: 14px; min-height: 36px; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.direction-status { display: flex; align-items: center; gap: 14px; min-height: 34px; margin-top: 7px; color: var(--muted); font-size: 10px; }
 .direction-status .active-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .direction-status .text-button { margin-left: auto; flex-shrink: 0; }
 .agent-note { background: transparent; border: 0; padding: 24px 0; }
 .transport { position: static; width: auto; margin: 12px 0 32px; border: 0; border-radius: 12px; box-shadow: none; background: var(--soft-accent); }
+.transport-next { min-width: 0; margin-left: 24px; }
+.transport-next strong, .transport-next span { display: block; }
+.transport-next strong { color: var(--text); font: 600 12px 'Manrope Variable', Manrope, sans-serif; }
+.transport-next span { margin-top: 2px; color: var(--muted); font-size: 10px; }
 @media (max-width: 850px) {
   .shoot-grid { gap: 24px; }
   .script-panel { padding-left: 0; }
@@ -333,15 +344,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   gap: 10px;
 }
 .director-fab {
-  width: 48px;
+  width: auto;
+  min-width: 48px;
   height: 48px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
   color: var(--on-accent);
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 12px;
   box-shadow: 0 12px 30px #14243a2b;
+  font-size: 11px;
+  font-weight: 700;
 }
 .director-fab:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
 .director-popover {
@@ -396,10 +413,18 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
     min-height: 0;
     flex: 1;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 158px 56px;
-    gap: 9px;
+    grid-template-rows: minmax(0, 1fr) 172px 64px;
+    gap: 10px;
   }
-  .shoot-grid { min-height: 0; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
+  .shoot-grid {
+    min-height: 0;
+    grid-template-columns: 252px minmax(0, 1fr) 250px;
+    grid-template-areas: "direction program script";
+    gap: 18px;
+  }
+  .shoot-grid > .direction-studio { grid-area: direction; }
+  .shoot-grid > .program-panel { grid-area: program; }
+  .shoot-grid > .script-panel { grid-area: script; }
   .program-panel, .script-panel { height: 100%; min-height: 0; }
   .program-panel { display: flex; flex-direction: column; overflow: hidden; }
   .program-panel .panel-title { min-height: 32px; height: 32px; }
@@ -415,7 +440,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .script-line p { font-size: 11px; line-height: 1.35; }
   .line-num { font-size: 8px; line-height: 14px; }
   .script-footer { padding: 6px 10px; font-size: 8px; }
-  .studio-lower { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; overflow: hidden; }
+  .studio-lower { min-height: 0; display: block; overflow: hidden; }
   .crew-dock { min-width: 0; display: flex; flex-direction: column; }
   .crew-dock .section-label { min-height: 20px; margin: 0 0 3px; align-items: center; }
   .camera-grid { min-height: 0; flex: 1; gap: 10px; }
@@ -424,7 +449,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .camera-card-header b { width: 17px; height: 17px; font-size: 8px; }
   .camera-state { font-size: 7px; }
   .camera-select { min-height: 0; gap: 10px; padding: 5px 7px; border-radius: 9px; }
-  .phone-frame { width: 64px; height: 76px; border-width: 3px; border-radius: 12px; }
+  .phone-frame { width: 72px; height: 84px; border-width: 3px; border-radius: 12px; }
   .phone-island { top: 3px; width: 26px; height: 7px; }
   .phone-bottom { height: 20px; }
   .phone-bottom > span:first-child { display: none; }
@@ -435,37 +460,31 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .camera-card-footer { height: 25px; padding-inline: 3px; }
   .camera-card-footer > span, .camera-card-footer button { font-size: 8px; }
   .camera-card-footer button { min-height: 24px; }
-  .studio-lower .direction-studio { min-height: 0; margin: 0; padding: 0; border: 0; overflow: hidden; }
-  .studio-lower .direction-heading { gap: 10px; }
-  .studio-lower .direction-identity { gap: 8px; }
-  .studio-lower .direction-identity strong { font-size: 12px; }
-  .studio-lower .direction-identity p { display: none; }
-  .studio-lower .clappy-orb { width: 28px; height: 28px; }
-  .studio-lower .direction-mode button { min-height: 29px; padding-inline: 9px; font-size: 9px; }
-  .studio-lower .preset-list { gap: 12px; margin-top: 9px; }
-  .studio-lower .preset-list button { padding: 2px 0 7px; }
-  .studio-lower .preset-list button strong { font-size: 9px; }
-  .studio-lower .preset-list button span { display: none; }
-  .studio-lower .live-direction { grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-top: 9px; }
-  .studio-lower .live-direction label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-  .studio-lower .live-direction input { min-height: 35px; height: 35px; padding-inline: 10px; font-size: 10px; }
-  .studio-lower .live-direction .secondary { min-height: 35px; padding: 7px 10px; font-size: 9px; }
-  .studio-lower .direction-status { display: none; }
-  .studio-lower .director-fingerprint {
-    display: grid;
-    min-height: 22px;
-    grid-template-columns: auto minmax(0,1fr) auto;
-    gap: 7px;
-    margin: 4px 0 0;
-    padding: 3px 0 0;
+  .shoot-grid > .direction-studio {
+    min-height: 0;
+    margin: 0;
+    padding: 6px 18px 0 0;
     border: 0;
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    scrollbar-width: thin;
   }
-  .studio-lower .director-fingerprint > svg { width: 13px; height: 13px; }
-  .studio-lower .director-fingerprint strong { font-size: 9px; }
-  .studio-lower .director-fingerprint span { display: none; }
-  .studio-lower .director-fingerprint small,
-  .studio-lower .director-fingerprint .text-button { font-size: 8px; }
-  .shoot-workspace > .transport { height: 56px; min-height: 56px; margin: 0; padding: 8px 14px 8px 72px; }
+  .shoot-grid > .direction-studio .direction-heading { gap: 10px; }
+  .shoot-grid > .direction-studio .direction-identity { align-items: flex-start; gap: 9px; }
+  .shoot-grid > .direction-studio .direction-identity strong { font-size: 14px; }
+  .shoot-grid > .direction-studio .direction-identity p { font-size: 10px; line-height: 1.4; }
+  .shoot-grid > .direction-studio .clappy-orb { width: 30px; height: 30px; flex-shrink: 0; }
+  .shoot-grid > .direction-studio .direction-control { margin-top: 17px; }
+  .shoot-grid > .direction-studio .direction-mode button { min-height: 48px; }
+  .shoot-grid > .direction-studio .preset-list button { min-height: 49px; }
+  .shoot-grid > .direction-studio .preset-list button strong { font-size: 10px; }
+  .shoot-grid > .direction-studio .live-direction { margin-top: 17px; }
+  .shoot-grid > .direction-studio .live-direction input { min-height: 38px; height: 38px; padding-inline: 10px; font-size: 10px; }
+  .shoot-grid > .direction-studio .live-direction .secondary { min-height: 38px; padding: 7px 9px; font-size: 9px; }
+  .shoot-grid > .direction-studio .direction-status { min-height: 28px; }
+  .shoot-grid > .direction-studio .director-fingerprint { margin-top: 5px; padding-top: 10px; }
+  .shoot-grid > .direction-studio .director-fingerprint span { font-size: 9px; }
+  .shoot-workspace > .transport { height: 64px; min-height: 64px; margin: 0; padding: 8px 14px 8px 128px; }
   .shoot-workspace .roll-button { min-height: 40px; padding-block: 8px; font-size: 12px; }
   .workspace > footer { min-height: 16px; margin-top: 3px; line-height: 1.4; }
   .workspace > .review-layout { min-height: 0; flex: 1; overflow-y: auto; }
@@ -476,6 +495,31 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .shoot-workspace { display: contents; }
   .director-assistant { left: 62px; bottom: 12px; }
   .director-popover { width: min(390px, calc(100vw - 78px)); }
+}
+
+@media (max-width: 850px) {
+  .shoot-grid > .script-panel { display: none; }
+  .shoot-grid > .direction-studio { margin-top: 24px; }
+}
+
+@media (max-width: 580px) {
+  .camera-grid {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 1px 7px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+  .camera-card { flex: 0 0 min(236px, 78vw); scroll-snap-align: start; }
+  .camera-select { min-height: 122px; flex-direction: row; padding-inline: 12px; }
+  .camera-info { text-align: left; }
+  .camera-info h3 { font-size: 16px; }
+  .camera-info p { font-size: 10px; }
+  .camera-card-footer { justify-content: space-between; padding-inline: 9px; }
+  .camera-card-footer > span { display: flex; font-size: 7px; }
+  .transport-next { order: 3; width: 100%; margin: 0; }
+  .transport-next span { font-size: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
