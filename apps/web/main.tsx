@@ -2,16 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
-  Brain,
   Check,
   ChevronDown,
   Clapperboard,
   Download,
   Film,
-  Focus,
-  Layers,
   LoaderCircle,
-  Maximize2,
   MessageCircle,
   Moon,
   Radio,
@@ -23,15 +19,13 @@ import {
   Video,
   Volume2,
   VolumeX,
-  Wifi,
   X,
 } from "lucide-react";
 import type { Camera, CameraId, DirectingPreset, Edit, Health, Session, Take } from "./types";
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/manrope";
 import "./style.css";
-import "./polish.css";
-import "./themes.css";
+import "./studio.css";
 import scenePlate from "../../assets/demo/open-cafe-v1/scene-preview.jpg";
 import { VoiceControl } from "./VoiceControl";
 import { useProgramMonitor } from "./useProgramMonitor";
@@ -110,7 +104,8 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [now, setNow] = useState(Date.now() / 1000);
   const [sceneOpen, setSceneOpen] = useState(false);
-  const [directorOpen, setDirectorOpen] = useState(false);
+  const [sidePanel, setSidePanel] = useState<"script" | "clappy">("script");
+  const [clappyUnread, setClappyUnread] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [events, setEvents] = useState<
     { seq: number; kind: string; timestamp: number; payload: unknown }[]
@@ -201,6 +196,13 @@ function App() {
     const timer = setInterval(() => setNow(Date.now() / 1000), 250);
     return () => clearInterval(timer);
   }, []);
+  const agentMessage = session?.agent?.message;
+  const seenMessage = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!agentMessage || agentMessage === seenMessage.current) return;
+    seenMessage.current = agentMessage;
+    if (sidePanel !== "clappy") setClappyUnread(true);
+  }, [agentMessage, sidePanel]);
   useEffect(() => {
     if (!credentials) return;
     let socket: WebSocket;
@@ -342,89 +344,65 @@ function App() {
 
   return (
     <div className="app-shell">
-      <aside className="rail">
-        <a className="brand-icon" href="/" aria-label="Clappy home">
-          <Clapperboard size={23} />
-        </a>
-        <button
-          className={page === "shoot" ? "active" : ""}
-          onClick={() => setPage("shoot")}
-          title="Production"
-          disabled={!session}
-          aria-pressed={page === "shoot"}
-        >
-          <Video size={21} />
-        </button>
-        <button
-          className={page === "review" ? "active" : ""}
-          onClick={() => setPage("review")}
-          title="Review takes"
-          disabled={!session}
-          aria-pressed={page === "review"}
-        >
-          <Layers size={21} />
-        </button>
-        <div className="rail-bottom">
-          <span className="avatar">SA</span>
-        </div>
-      </aside>
       <main>
         <header className="topbar">
-          <div className="wordmark">
-            clappy<span>STUDIO</span>
+          <a className="brand" href="/" aria-label="Clappy home">
+            <span className="brand-icon"><Clapperboard size={19} /></span>
+            <span className="wordmark">clappy<span>STUDIO</span></span>
+          </a>
+          <nav className="studio-nav" aria-label="Studio sections">
+            <button
+              className={page === "shoot" ? "selected" : ""}
+              aria-pressed={page === "shoot"}
+              disabled={!session}
+              onClick={() => setPage("shoot")}
+            >
+              <Video size={15} />
+              On set
+            </button>
+            <button
+              className={page === "review" ? "selected" : ""}
+              aria-pressed={page === "review"}
+              disabled={!session}
+              onClick={() => setPage("review")}
+            >
+              <Film size={15} />
+              Takes &amp; edits <span>{session?.takes.length || 0}</span>
+            </button>
+          </nav>
+          {session && (
+            <div className="show-id">
+              <strong>{session.title}</strong>
+              <button
+                className="icon-button"
+                aria-label="Scene settings"
+                disabled={rolling || transitioning}
+                onClick={() => setSceneOpen(true)}
+              >
+                <Settings2 size={15} />
+              </button>
+            </div>
+          )}
+          <div className="topbar-actions">
+            <StatusMenu
+              health={health}
+              connected={connected}
+              needsInvite={needsInvite}
+              disabled={!session}
+              onInspect={inspect}
+            />
+            <button
+              className="icon-button theme-toggle"
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+              onClick={() => setTheme(value => value === 'light' ? 'dark' : 'light')}
+            >
+              {theme === 'light' ? <Moon size={16}/> : <Sun size={16}/>}
+            </button>
+            <span className="avatar" title="Signed in">SA</span>
           </div>
-          <div className="breadcrumb">
-            Productions <span>/</span> {session?.title || "New production"}
-          </div>
-          <button className="secondary theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} onClick={() => setTheme(value => value === 'light' ? 'dark' : 'light')}>
-            {theme === 'light' ? <Moon size={16}/> : <Sun size={16}/>}
-          </button>
-          <button className="text-button" onClick={inspect} disabled={!session}>
-            <Radio size={14} />
-            <span className={connected ? "dot online" : "dot"} />
-            {needsInvite ? "Invitation required" : connected ? "Connected" : "Connecting"}
-          </button>
         </header>
         <div className="workspace">
-          <div className="production-header">
-            <div>
-              <h1>
-                {session?.title || (needsInvite ? "Welcome to the studio." : "Setting the scene…")}{" "}
-                {session && <span className="scene-chip">SCENE 01</span>}
-              </h1>
-            </div>
-            <button
-              className="secondary"
-              aria-label="Scene settings"
-              disabled={!session || rolling || transitioning}
-              onClick={() => setSceneOpen(true)}
-            >
-              <Settings2 size={15} /> Scene settings
-            </button>
-          </div>
-          <div className="workspace-tabs">
-            <div>
-              <button
-                className={page === "shoot" ? "selected" : ""}
-                aria-pressed={page === "shoot"}
-                disabled={!session}
-                onClick={() => setPage("shoot")}
-              >
-                <Video size={15} />
-                On set
-              </button>
-              <button
-                className={page === "review" ? "selected" : ""}
-                aria-pressed={page === "review"}
-                disabled={!session}
-                onClick={() => setPage("review")}
-              >
-                <Film size={15} />
-                Takes & edits <span>{session?.takes.length || 0}</span>
-              </button>
-            </div>
-            <span className="mode-label">VIRTUAL CAMERA REHEARSAL</span>
-          </div>
           {(error || session?.error) && (
             <div className="error-banner" role="alert">
               {error || session?.error}
@@ -436,185 +414,180 @@ function App() {
           {session ? (
             page === "shoot" ? (
               <div className="shoot-workspace">
-                <div className="shoot-grid">
-                  <section className="program-panel">
-                    <div className="panel-title">
-                      <span>
-                        <span
-                          className={rolling ? "dot recording" : "dot online"}
-                        />{" "}
-                        PROGRAM MONITOR
-                      </span>
-                      <button className="text-button" disabled={!rolling} onClick={toggleSound} aria-label={monitorSound?'Mute production audio':'Listen to production audio'}>
-                        {monitorSound?<Volume2 size={14}/>:<VolumeX size={14}/>} Master audio
-                      </button>
-                      <span>
-                        {rolling
-                          ? "LIVE"
-                          : transitioning
-                            ? session.state
-                            : "STANDBY"}{" "}
-                        <i /> {clock(elapsed)}
-                      </span>
-                    </div>
-                    {rolling && <div className="monitor-health" role="status">{playbackStatus} · {sourceClockStatus}</div>}
-                    <div className="program-screen">
-                      {session.cameras.map((cam) => (
-                        <div
-                          key={cam.id}
-                          className={`program-layer ${cam.id === session.selected_camera ? "visible" : ""}`}
-                        >
-                          <Stream
-                            sessionId={session.id}
-                            camera={cam}
-                            path={rolling ? take?.paths?.[cam.id] : undefined}
-                            frameRef={cam.id==='c'?masterFrame:undefined}
-                            preview={preview(cam.id)}
-                          />
-                        </div>
-                      ))}
-                      <div className="program-overlay">
-                        <span>
-                          <span className="camera-letter">
-                            {session.selected_camera.toUpperCase()}
-                          </span>
-                          {
-                            session.cameras.find(
-                              (c) => c.id === session.selected_camera,
-                            )?.role
-                          }{" "}
-                          <small>
-                            {session.hold ? "HOLDING" : "ON PROGRAM"}
-                          </small>
-                        </span>
-                        <Maximize2 size={16} />
-                      </div>
-                      {rolling && take?.decisions?.length ? (
-                        <DecisionHud session={session} take={take} />
-                      ) : null}
-                      {!rolling && (
-                        <div className="standby-message">
-                          <Focus size={35} />
-                          <h2>
-                            {transitioning
-                              ? "Bringing the crew online…"
-                              : session.state === "ARMED"
-                                ? "All set. Let’s roll."
-                                : "A scene waiting to happen."}
-                          </h2>
-                          <p>
-                            {transitioning
-                              ? "Waiting for real media acknowledgments."
-                              : session.state === "ARMED"
-                                ? "Roll cameras or speak a direction when you're ready."
-                              : "Arm the virtual cameras to begin your rehearsal."}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="program-caption">
-                      <ShieldCheck size={14} />
-                              <span>{session.source_set==='last-train-animatic-v1'?'Animatic originals preserved':session.source_set==='open-cafe-v1'?'Open-footage master preserved':'Fixture originals preserved'}</span>
-                      <span className="push-right">
-                        960 × 540 <i /> 30 FPS
-                      </span>
-                    </div>
-                  </section>
-                  <section className="script-panel">
-                    <div className="panel-title">
-                      <span>THE SCREENPLAY</span>
-                      <button
-                        className="icon-button"
-                        onClick={() => setSceneOpen(true)}
-                        aria-label="Edit screenplay"
-                      >
-                        <Settings2 size={14} />
-                      </button>
-                    </div>
-                    <div className="script-heading">
-                      {session.script.split("\n")[0]}
-                    </div>
-                    <div className="script-body">
-                      {session.script
-                        .split("\n\n")
-                        .slice(1)
-                        .map((block, i) => (
-                          <div
-                            className={`script-line ${session.performance?.line?.id === i ? "current" : ""}`}
-                            key={i}
-                          >
-                            <span className="line-num">
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <div>
-                              {block
-                                .split("\n")
-                                .map((line, j) =>
-                                  j === 0 && /^[A-Z ]+$/.test(line) ? (
-                                    <h4 key={j}>{line}</h4>
-                                  ) : (
-                                    <p key={j}>{line}</p>
-                                  ),
-                                )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                    <div className="script-footer">
-                      <span className={session.performance?.status==='TRACKING'?'dot online':'dot'} />
-                      {session.performance?.status==='TRACKING'?`Google speech · ${session.performance.line?.character} · ${Math.round((session.performance.line?.confidence||0)*100)}% match`:session.performance?.status==='LISTENING'?'Listening to production audio':session.performance?.status==='FAILED'?'Speech needs attention':'Scene following awaits dialogue audio'}
-                    </div>
-                  </section>
-                  <DirectionStudio session={session} busy={busy} transitioning={transitioning}
-                    onCommand={(kind,options)=>command(kind,undefined,options)} onInspect={inspect}/>
+                <div className="source-column" aria-label="Camera sources">
+                  {session.cameras.map((cam) => (
+                    <CameraCard
+                      sessionId={session.id}
+                      key={cam.id}
+                      camera={cam}
+                      preview={preview(cam.id)}
+                      selected={cam.id === session.selected_camera}
+                      path={rolling ? take?.paths?.[cam.id] : undefined}
+                      disabled={busy || (rolling && cam.state !== 'RECORDING')}
+                      onSelect={() => command("switch", cam.id)}
+                      onHold={() =>
+                        command(
+                          session.hold && session.selected_camera === cam.id
+                            ? "release"
+                            : "hold",
+                          cam.id,
+                        )
+                      }
+                      holding={session.hold && session.selected_camera === cam.id}
+                      rolling={rolling}
+                    />
+                  ))}
                 </div>
-                <div className="studio-lower">
-                  <div className="crew-dock">
-                    <div className="section-label">
-                      <span>
-                        CAMERA CREW <small>3 virtual iPhones</small>
-                      </span>
-                      <span>Choose a view to cut</span>
-                    </div>
-                    <div className="camera-grid">
-                      {session.cameras.map((cam) => (
-                        <CameraCard
-                          sessionId={session.id}
-                          key={cam.id}
-                          camera={cam}
-                          preview={preview(cam.id)}
-                          selected={cam.id === session.selected_camera}
-                          path={rolling ? take?.paths?.[cam.id] : undefined}
-                          disabled={busy || (rolling && cam.state !== 'RECORDING')}
-                          onSelect={() => command("switch", cam.id)}
-                          onHold={() =>
-                            command(
-                              session.hold && session.selected_camera === cam.id
-                                ? "release"
-                                : "hold",
-                              cam.id,
-                            )
-                          }
-                          holding={session.hold && session.selected_camera === cam.id}
-                          rolling={rolling}
-                        />
-                      ))}
-                    </div>
+                <section className="program-panel">
+                  <div className="panel-title">
+                    <span>
+                      <span className={rolling ? "dot recording" : "dot online"} />
+                      {rolling ? "LIVE" : transitioning ? session.state : "STANDBY"}
+                    </span>
+                    <span className="timecode">{clock(elapsed)}</span>
+                    <button className="text-button" disabled={!rolling} onClick={toggleSound} aria-label={monitorSound?'Mute production audio':'Listen to production audio'}>
+                      {monitorSound?<Volume2 size={14}/>:<VolumeX size={14}/>}
+                      {monitorSound ? "Sound on" : "Muted"}
+                    </button>
                   </div>
-                </div>
+                  {rolling && <div className="monitor-health" role="status">{playbackStatus} · {sourceClockStatus}</div>}
+                  <div className="program-stage">
+                  <div className="program-screen">
+                    {session.cameras.map((cam) => (
+                      <div
+                        key={cam.id}
+                        className={`program-layer ${cam.id === session.selected_camera ? "visible" : ""}`}
+                      >
+                        <Stream
+                          sessionId={session.id}
+                          camera={cam}
+                          path={rolling ? take?.paths?.[cam.id] : undefined}
+                          frameRef={cam.id==='c'?masterFrame:undefined}
+                          preview={preview(cam.id)}
+                        />
+                      </div>
+                    ))}
+                    <div className="program-overlay">
+                      <span>
+                        <span className="camera-letter">
+                          {session.selected_camera.toUpperCase()}
+                        </span>
+                        {
+                          session.cameras.find(
+                            (c) => c.id === session.selected_camera,
+                          )?.role
+                        }{" "}
+                        <small>
+                          {session.hold ? "HOLDING" : "PGM"}
+                        </small>
+                      </span>
+                    </div>
+                    {rolling && take?.decisions?.length ? (
+                      <DecisionHud session={session} take={take} />
+                    ) : null}
+                    {!rolling && (
+                      <div className="standby-message">
+                        <h2>
+                          {transitioning
+                            ? "Starting cameras"
+                            : session.state === "ARMED"
+                              ? "Ready to roll"
+                              : "Standby"}
+                        </h2>
+                        <p>
+                          {transitioning
+                            ? "Waiting for media acknowledgments."
+                            : session.state === "ARMED"
+                              ? "Roll when the actors are set."
+                              : "Arm cameras to begin the take."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  </div>
+                  <div className="program-caption">
+                    <ShieldCheck size={14} />
+                    <span>{session.source_set==='last-train-animatic-v1'?'Animatic originals preserved':session.source_set==='open-cafe-v1'?'Open-footage master preserved':'Fixture originals preserved'}</span>
+                    <span className="push-right">960 × 540 · 30 FPS</span>
+                  </div>
+                </section>
+                <aside className="side-rail">
+                  <DirectionStudio session={session} busy={busy} transitioning={transitioning}
+                    onCommand={(kind,options)=>command(kind,undefined,options)}
+                    onAskClappy={()=>{setSidePanel("clappy");setClappyUnread(false);}}/>
+                  <section className="side-panel">
+                    <div className="side-panel-tabs" role="tablist" aria-label="Reference panel">
+                      <button role="tab" aria-selected={sidePanel === "script"}
+                        className={sidePanel === "script" ? "selected" : ""}
+                        onClick={() => setSidePanel("script")}>
+                        Screenplay
+                      </button>
+                      <button role="tab" aria-selected={sidePanel === "clappy"}
+                        className={sidePanel === "clappy" ? "selected" : ""}
+                        onClick={() => { setSidePanel("clappy"); setClappyUnread(false); }}>
+                        Clappy
+                        {clappyUnread && <span className="tab-badge" aria-label="New reply" />}
+                      </button>
+                    </div>
+                    {sidePanel === "script" ? (
+                      <div className="script-panel" role="tabpanel">
+                        <div className="script-heading">
+                          {session.script.split("\n")[0]}
+                        </div>
+                        <div className="script-body">
+                          {session.script
+                            .split("\n\n")
+                            .slice(1)
+                            .map((block, i) => (
+                              <div
+                                className={`script-line ${session.performance?.line?.id === i ? "current" : ""}`}
+                                key={i}
+                              >
+                                <span className="line-num">
+                                  {String(i + 1).padStart(2, "0")}
+                                </span>
+                                <div>
+                                  {block
+                                    .split("\n")
+                                    .map((line, j) =>
+                                      j === 0 && /^[A-Z ]+$/.test(line) ? (
+                                        <h4 key={j}>{line}</h4>
+                                      ) : (
+                                        <p key={j}>{line}</p>
+                                      ),
+                                    )}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                        <div className="script-footer">
+                          <span className={session.performance?.status==='TRACKING'?'dot online':'dot'} />
+                          {session.performance?.status==='TRACKING'?`${session.performance.line?.character} · ${Math.round((session.performance.line?.confidence||0)*100)}%`:session.performance?.status==='LISTENING'?'Listening':session.performance?.status==='FAILED'?'Speech needs attention':'Waiting for dialogue'}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="clappy-panel" role="tabpanel">
+                        <VoiceControl disabled={transitioning||busy} onAudio={voice}/>
+                        {session.queued_direction&&<div className="queued-direction" role="status"><strong>{session.queued_direction.status}</strong> {session.queued_direction.note} <span>Line {session.queued_direction.target_line_id+1}.</span></div>}
+                        <AgentNote session={session} compact onSend={(note) => direct(note, "recall")}/>
+                      </div>
+                    )}
+                  </section>
+                </aside>
                 <div className="transport">
                   <div className="take-counter">
-                    <span>SCENE</span>
+                    <span className={rolling ? "dot recording" : session.state === "ARMED" ? "dot online" : "dot"} />
+                    <span>SC</span>
                     <strong>01</strong>
                     <i />
-                    <span>TAKE</span>
-                    <strong>
-                      {String(take?.number || 1).padStart(2, "0")}
-                    </strong>
+                    <span>TK</span>
+                    <strong>{String(take?.number || 1).padStart(2, "0")}</strong>
                   </div>
-                  <div className="transport-next" aria-live="polite">
-                    <strong>{rolling ? "Recording all three cameras" : session.state === "ARMED" ? "The crew is ready" : "Start your take"}</strong>
-                    <span>{rolling ? "Switch cameras above. Every angle is still being saved." : session.state === "ARMED" ? "Press Roll cameras when the actors are ready." : "Arm the cameras, then roll when you are ready."}</span>
+                  <div className="transport-mode" aria-live="polite">
+                    {session.auto_enabled ? "Clappy directing" : "You directing"}
+                    <i />
+                    {directingPresets.find((item) => item.id === (session.directing_preset || "classic"))?.name}
+                    {session.live_direction ? <span>Following {session.live_direction}</span> : null}
                   </div>
                   <button
                     className={`roll-button ${rolling ? "cut" : ""}`}
@@ -691,50 +664,8 @@ function App() {
               {error?<button className="secondary" onClick={()=>location.reload()}>Retry connection</button>:<><LoaderCircle className="spin" /> Connecting to your production…</>}
             </div>
           )}
-          <footer>
-            <span>
-              CLAPPY <i /> A SMALL CREW, A BIGGER PICTURE.
-            </span>
-            {session && <span>
-              Media hub{" "}
-              <b className={health?.media.ready ? "good" : ""}>
-                {health?.media.ready ? "online" : "offline"}
-              </b>{" "}
-              <i /> Google AI{" "}
-              <b className={health?.ai.ready ? "good" : ""}>
-                {health?.ai.ready ? "connected" : "not verified"}
-              </b>{" "}
-              <i /> ClickHouse{" "}
-              <b className={health?.memory.ready ? "good" : ""}>
-                {health?.memory.ready ? "online" : "offline"}
-              </b>
-            </span>}
-          </footer>
         </div>
       </main>
-      {session && page === "shoot" && (
-        <div className={`director-assistant ${directorOpen ? "open" : ""}`}>
-          {directorOpen && (
-            <section className="director-popover" aria-label="Clappy director">
-              <div className="director-popover-header">
-                <span><Sparkles size={16}/><strong>Clappy director</strong></span>
-                <button className="icon-button" onClick={() => setDirectorOpen(false)} aria-label="Close director">
-                  <X size={17}/>
-                </button>
-              </div>
-              <p className="director-popover-intro">Speak a direction or ask about this production.</p>
-              <VoiceControl disabled={transitioning||busy} onAudio={voice}/>
-              {session.queued_direction&&<div className="queued-direction" role="status"><strong>{session.queued_direction.status}</strong> {session.queued_direction.note} <span>Screenplay line {session.queued_direction.target_line_id+1}.</span></div>}
-              <AgentNote session={session} compact onSend={(note) => direct(note, "recall")}/>
-            </section>
-          )}
-          <button className="director-fab" onClick={() => setDirectorOpen(value => !value)}
-            aria-label={directorOpen ? "Close Clappy director" : "Talk to Clappy director"}
-            aria-expanded={directorOpen} title="Talk to Clappy director">
-            <MessageCircle size={19}/><span>{directorOpen ? "Close" : "Ask Clappy"}</span>
-          </button>
-        </div>
-      )}
       {sceneOpen && session && (
         <SceneDialog
           session={session}
@@ -781,6 +712,72 @@ function App() {
               ))}
             </div>
           </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatusMenu({health,connected,needsInvite,disabled,onInspect}:{
+  health:Health|null;
+  connected:boolean;
+  needsInvite:boolean;
+  disabled:boolean;
+  onInspect:()=>Promise<void>;
+}) {
+  const [open,setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement|null>(null);
+  useEffect(()=>{
+    if(!open) return;
+    const away = (event:MouseEvent) => {
+      if(!wrap.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event:KeyboardEvent) => { if(event.key==='Escape') setOpen(false); };
+    document.addEventListener('mousedown',away);
+    document.addEventListener('keydown',escape);
+    return ()=>{
+      document.removeEventListener('mousedown',away);
+      document.removeEventListener('keydown',escape);
+    };
+  },[open]);
+  const services = [
+    {name:'Media hub', ready:!!health?.media.ready, value:health?.media.ready?'Online':'Offline'},
+    {name:'Google AI', ready:!!health?.ai.ready, value:health?.ai.ready?'Connected':'Not verified'},
+    {name:'ClickHouse', ready:!!health?.memory.ready, value:health?.memory.ready?'Online':'Offline'},
+  ];
+  const label = needsInvite ? "Invitation required" : connected ? "Connected" : "Connecting";
+  const degraded = !!health && services.some((service)=>!service.ready);
+  return (
+    <div className="status-menu-wrap" ref={wrap}>
+      <button className="status-pill" onClick={()=>setOpen(value=>!value)}
+        aria-expanded={open} aria-haspopup="true" title="Production status">
+        <span className={connected ? "dot online" : "dot"} />
+        <span className="status-pill-label">{label}</span>
+        {degraded && <span className="status-warn" aria-label="Some services are unavailable" />}
+        <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="status-panel" role="menu">
+          <div className="status-panel-head">
+            <Radio size={14} />
+            <div>
+              <strong>{label}</strong>
+              <span>{connected ? "Live session channel is open." : "Reconnecting to your production."}</span>
+            </div>
+          </div>
+          <ul className="status-services">
+            {services.map((service)=>(
+              <li key={service.name}>
+                <span className={service.ready ? "dot online" : "dot"} />
+                {service.name}
+                <b className={service.ready ? "good" : ""}>{health ? service.value : "Checking"}</b>
+              </li>
+            ))}
+          </ul>
+          <button className="secondary" disabled={disabled}
+            onClick={()=>{setOpen(false);void onInspect();}}>
+            Production log <ArrowRight size={14} />
+          </button>
         </div>
       )}
     </div>
@@ -834,71 +831,48 @@ function Stream({ camera, path, frameRef, preview, sessionId }: { camera: Camera
   );
 }
 
-function DirectionStudio({session,busy,transitioning,onCommand,onInspect}:{
+function DirectionStudio({session,busy,transitioning,onCommand,onAskClappy}:{
   session:Session;
   busy:boolean;
   transitioning:boolean;
   onCommand:(kind:string,options?:{preset?:DirectingPreset;direction?:string})=>Promise<void>;
-  onInspect:()=>Promise<void>;
+  onAskClappy:()=>void;
 }) {
   const [direction,setDirection]=useState(session.live_direction||"");
   useEffect(()=>setDirection(session.live_direction||""),[session.live_direction]);
   const active=directingPresets.find(item=>item.id===(session.directing_preset||"classic"))||directingPresets[0];
   const canUseAI=!!session.source_set&&session.source_set!=="charts";
   const fingerprint=directorFingerprint(session);
-  return <section className="direction-studio" aria-label="Directing approach">
-    <div className="direction-heading">
-      <div className="direction-identity">
-        <span className="clappy-orb"><Clapperboard size={18}/></span>
-        <div><strong>Directing plan</strong><p>Decide who calls each shot before you roll.</p></div>
-      </div>
+  return <section className="direction-dock" aria-label="Directing approach">
+    <div className="direction-mode" aria-label="Direction mode">
+      <button className={!session.auto_enabled?"selected":""} aria-pressed={!session.auto_enabled}
+        disabled={busy||transitioning} onClick={()=>onCommand("auto_off")}>You</button>
+      <button className={session.auto_enabled?"selected":""} aria-pressed={!!session.auto_enabled}
+        disabled={busy||transitioning||!canUseAI} title={!canUseAI?"Choose a dialogue source in Scene settings":""}
+        onClick={()=>onCommand("auto_on")}>Clappy</button>
     </div>
-    <div className="direction-control">
-      <span className="control-label">Who calls the shots?</span>
-      <div className="direction-mode" aria-label="Direction mode">
-        <button className={!session.auto_enabled?"selected":""} aria-pressed={!session.auto_enabled}
-          disabled={busy||transitioning} onClick={()=>onCommand("auto_off")}><strong>You direct</strong><span>Cut live</span></button>
-        <button className={session.auto_enabled?"selected":""} aria-pressed={!!session.auto_enabled}
-          disabled={busy||transitioning||!canUseAI} title={!canUseAI?"Choose a dialogue source in Scene settings":""}
-          onClick={()=>onCommand("auto_on")}><strong>Clappy directs</strong><span>Follows dialogue</span></button>
-      </div>
-      {!canUseAI && <p className="direction-help">Choose a dialogue scene in Scene settings to enable Clappy.</p>}
-    </div>
-    <div className="direction-control">
-      <span className="control-label">Camera style</span>
-      <div className="preset-list" aria-label="Camera-work preset">
-      {directingPresets.map(item=><button key={item.id} className={item.id===active.id?"selected":""}
-        aria-pressed={item.id===active.id} disabled={busy||transitioning}
-        onClick={()=>onCommand("direct",{preset:item.id})}>
-        <strong>{item.name}</strong><span>{item.short}</span>
-      </button>)}
-      </div>
-      <p className="preset-description">{active.description}</p>
-    </div>
+    <label className="sr-only" htmlFor="camera-style">Camera style</label>
+    <select id="camera-style" value={active.id} disabled={busy||transitioning}
+      onChange={(event)=>onCommand("direct",{preset:event.target.value as DirectingPreset})}>
+      {directingPresets.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}
+    </select>
+    <button className="icon-button" onClick={onAskClappy} aria-label="Talk to Clappy" title="Talk to Clappy">
+      <MessageCircle size={15}/>
+    </button>
     <form className="live-direction" onSubmit={async event=>{
       event.preventDefault();
       await onCommand("direct",{direction:direction.trim()});
     }}>
-      <label htmlFor="live-direction">Add a direction <span>Optional</span></label>
+      <label className="sr-only" htmlFor="live-direction">Add a direction</label>
       <input id="live-direction" value={direction} maxLength={300} minLength={3}
         onChange={event=>setDirection(event.target.value)}
-        placeholder="Example: Favor Bella after the reveal"
+        placeholder="Favor Bella after the reveal"
         disabled={busy||transitioning}/>
-      <button className="secondary" disabled={busy||transitioning||direction.trim().length<3}>Apply note</button>
+      <button className="secondary" disabled={busy||transitioning||direction.trim().length<3}>Apply</button>
     </form>
-    <div className="direction-status">
-      {session.live_direction&&<span className="active-note">Direction: {session.live_direction}</span>}
-      <button className="text-button" onClick={onInspect}>Production log <ArrowRight size={14}/></button>
-    </div>
-    <div className={`director-fingerprint ${fingerprint ? "learned" : "learning"}`}>
-      <Brain size={17}/>
-      <div>
-        <strong>Director fingerprint</strong>
-        <span>{fingerprint?.summary || "Make two manual cuts and Clappy will begin learning your visual rhythm."}</span>
-      </div>
-      {fingerprint ? <button className="text-button" disabled={busy||transitioning}
-        onClick={()=>onCommand("direct",{direction:fingerprint.instruction})}>Use my style <ArrowRight size={13}/></button> : <small>LEARNING</small>}
-    </div>
+    {!canUseAI && <p className="direction-help">Pick a dialogue scene in settings to enable Clappy.</p>}
+    {fingerprint ? <button className="text-button use-style" disabled={busy||transitioning}
+      onClick={()=>onCommand("direct",{direction:fingerprint.instruction})}>Use my style <ArrowRight size={13}/></button> : null}
   </section>;
 }
 
@@ -928,67 +902,42 @@ function CameraCard({
   const stateLabel = camera.state === "RECORDING" ? "REC" : camera.state === "OFFLINE" ? "STANDBY" : camera.state;
   return (
     <article
-      className={`camera-card ${selected ? "selected" : ""}`}
+      className={`camera-card ${selected ? "selected" : ""} ${holding ? "holding" : ""}`}
       style={{ "--camera-color": camera.color } as React.CSSProperties}
     >
-      <div className="camera-card-header">
-        <span>
-          <b>{camera.id.toUpperCase()}</b>
-          {camera.name}
-        </span>
-        <span
-          className={
-            camera.state === "RECORDING" ? "rec-label" : "camera-state"
-          }
-        >
-          {camera.state === "RECORDING" ? (
-            <>
-              <span className="dot recording" /> REC
-            </>
-          ) : (
-            stateLabel
-          )}
-        </span>
-      </div>
       <button
         className="camera-select"
         disabled={disabled}
         onClick={onSelect}
         aria-label={rolling ? `Cut to ${camera.role}` : `Preview ${camera.role}`}
       >
-        <div className="phone-frame">
-          <div className="phone-island" />
+        <div className="source-preview-frame">
           <Stream sessionId={sessionId} camera={camera} path={path} preview={preview}/>
-          <div className="phone-bottom">
-            <span>VIRTUAL IPHONE</span>
-            <span className="phone-shutter" />
-          </div>
         </div>
-        <div className="camera-info">
-          <h3>{camera.role}</h3>
-          <p>{camera.framing}</p>
-          <span className="camera-spec">
-            540p preview <i /> {path ? "Live transport" : "Standby"}
+        <div className="source-meta">
+          <b>{camera.id.toUpperCase()}</b>
+          <span>{camera.role}</span>
+          <span
+            className={
+              camera.state === "RECORDING" ? "rec-label" : "camera-state"
+            }
+          >
+            {camera.state === "RECORDING" ? (
+              <>
+                <span className="dot recording" /> REC
+              </>
+            ) : (
+              stateLabel
+            )}
           </span>
         </div>
       </button>
-      <div className="camera-card-footer">
-        <span>
-          {selected ? (
-            <>
-              <span className="dot online" /> {rolling ? "ON PROGRAM" : "SELECTED"}
-            </>
-          ) : (
-            <>
-              <Wifi size={12} /> AVAILABLE
-            </>
-          )}
-        </span>
-        {rolling && <button disabled={disabled} onClick={onHold}>
-            {holding ? "Release hold" : "Hold shot"}
-            {holding ? <Check size={13} /> : <Focus size={13} />}
-          </button>}
-      </div>
+      {rolling && (
+        <button className="source-hold" disabled={disabled} onClick={onHold}>
+          {holding ? "Release" : "Hold"}
+          {holding ? <Check size={12} /> : null}
+        </button>
+      )}
     </article>
   );
 }
@@ -1028,15 +977,15 @@ function Review({
   if (!take)
     return (
       <div className="empty-review">
-        <Film size={42} />
-        <h2>Your first cut starts on set.</h2>
-        <p>Record a take and its timeline will appear here.</p>
+        <Film size={36} />
+        <h2>No takes yet</h2>
+        <p>Record a take on set and it will appear here.</p>
       </div>
     );
   return (
     <div className="review-layout">
       <aside className="take-list" ref={takeList} aria-label="Saved takes">
-        <div className="eyebrow">YOUR TAKES</div>
+        <div className="eyebrow">Takes</div>
         {session.takes.map((t) => (
           <button
             key={t.id}
@@ -1213,11 +1162,10 @@ function AgentNote({
         <Clapperboard size={20} />
         <div>
           <strong>
-            {editing ? "A different point of view." : "Talk to your director."}
+            {editing ? "Recut this take" : "Ask Clappy"}
           </strong>
           <p>
-            Gemini + real ClickHouse production memory
-            {editing ? " · Your original edit stays untouched." : ""}
+            {editing ? "The original cut stays untouched." : "Uses this production's memory."}
           </p>
         </div>
       </div>}
