@@ -36,6 +36,12 @@ independent live-action angles, lip-synced performances or physical iPhone foota
 Source-generation manifests retain hashes and lineage; frame-coded derivatives
 do not overwrite their parents.
 
+`assets/demo/last-train-v1/scene-preview.jpg` is the existing camera-C thumbnail
+from `scripts.generate_animatic`, reused unchanged for the invitation screen.
+The original generation prompt and plate remain in the adjacent provenance file.
+The app self-hosts its existing DM Sans and Manrope faces using Fontsource
+packages; their OFL license texts are retained in the installed package inventory.
+
 The browser test microphone uses an owned Google-voiced WAV fixture. It is not a
 recording of the user's microphone. No non-Google model API powers this app.
 
