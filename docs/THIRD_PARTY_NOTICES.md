@@ -45,5 +45,15 @@ packages; their OFL license texts are retained in the installed package inventor
 The browser test microphone uses an owned Google-voiced WAV fixture. It is not a
 recording of the user's microphone. No non-Google model API powers this app.
 
+## Open live-action demo footage
+
+`assets/demo/open-cafe-v1/master-original.mp4` is “Two Persons Talking to Each
+Other While Holding Their Coffee Drink” by cottonbro studio, downloaded from
+Pexels and used under the Pexels License. The adjacent `provenance.json` records
+the source page, download URL, license URL, download date, media facts and SHA-256.
+Clappy derives all three virtual views from this one master and adds fictional
+Google-synthesized rehearsal dialogue. The performers are not the fictional
+characters, do not endorse Clappy, and are not presented as physical iPhone feeds.
+
 Do not publish `data/`, environment files, production/browser keys, cloud access
 details or database volumes as part of an open-source source archive.

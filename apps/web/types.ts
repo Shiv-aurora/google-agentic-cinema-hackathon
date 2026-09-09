@@ -52,7 +52,7 @@ export type Session = {
   error: string | null;
   policy: string;
   agent?: { status: string; message: string; edit_id?: string };
-  source_set?: "charts" | "last-train-v1" | "last-train-animatic-v1";
+  source_set?: "charts" | "last-train-v1" | "last-train-animatic-v1" | "open-cafe-v1";
   auto_enabled?: boolean;
   directing_preset?: DirectingPreset;
   live_direction?: string;

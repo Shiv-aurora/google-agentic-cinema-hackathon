@@ -31,7 +31,7 @@ import "@fontsource-variable/manrope";
 import "./style.css";
 import "./polish.css";
 import "./themes.css";
-import scenePlate from "../../assets/demo/last-train-v1/scene-preview.jpg";
+import scenePlate from "../../assets/demo/open-cafe-v1/scene-preview.jpg";
 import { VoiceControl } from "./VoiceControl";
 import { useProgramMonitor } from "./useProgramMonitor";
 import { useSourceClock } from "./useSourceClock";
@@ -329,7 +329,7 @@ function App() {
     rolling && take?.started_at ? now - take.started_at : take?.duration || 0;
   const transitioning =
     session?.state === "STARTING" || session?.state === "STOPPING";
-  const preview=(camera:CameraId)=>session?.source_set==='last-train-animatic-v1'?`/api/sessions/${session.id}/preview/${camera}`:undefined;
+  const preview=(camera:CameraId)=>session&&['last-train-animatic-v1','open-cafe-v1'].includes(session.source_set||'')?`/api/sessions/${session.id}/preview/${camera}`:undefined;
   useEffect(()=>{if(!rolling)setMonitorSound(false);},[rolling]);
   const toggleSound=async()=>{
     const video=masterFrame.current?.contentDocument?.querySelector('video');
@@ -512,7 +512,7 @@ function App() {
                     </div>
                     <div className="program-caption">
                       <ShieldCheck size={14} />
-                      <span>{session.source_set==='last-train-animatic-v1'?'Animatic originals preserved':'Fixture originals preserved'}</span>
+                              <span>{session.source_set==='last-train-animatic-v1'?'Animatic originals preserved':session.source_set==='open-cafe-v1'?'Open-footage master preserved':'Fixture originals preserved'}</span>
                       <span className="push-right">
                         960 × 540 <i /> 30 FPS
                       </span>
@@ -675,8 +675,8 @@ function App() {
           ) : needsInvite ? (
             <div className="invite-layout">
             <div className="invite-scene">
-              <img src={scenePlate} width="960" height="540" decoding="async" alt="Tom and Bella in The last train, an original Google-generated scene still" />
-              <div className="invite-scene-copy"><Clapperboard size={25}/><h2>One scene.<br/>A different point of view.</h2><p>Original Google-generated still. Virtual camera views.</p></div>
+              <img src={scenePlate} width="960" height="540" decoding="async" alt="Two performers in an openly licensed cafe scene" />
+              <div className="invite-scene-copy"><Clapperboard size={25}/><h2>One take.<br/>Every point of view.</h2><p>Open live-action footage. Synchronized virtual camera views.</p></div>
             </div>
             <section className="invite-gate">
               <ShieldCheck size={30}/>
@@ -800,7 +800,7 @@ function DecisionHud({session,take}:{session:Session;take:Take}) {
 
 function Stream({ camera, path, frameRef, preview, sessionId }: { camera: Camera; sessionId:string; path?: string; preview?:string; frameRef?:React.RefObject<HTMLIFrameElement|null> }) {
   if(path&&camera.state!=='RECORDING')return <div className="empty-stream" role="status"><span>{camera.role} unavailable</span><small>Live connection interrupted</small></div>;
-  if(!path&&preview)return <img className="source-preview" src={preview} alt={`${camera.role} — synthetic animatic preview`}/>;
+  if(!path&&preview)return <img className="source-preview" src={preview} alt={`${camera.role} — virtual camera preview`}/>;
   if (!path)
     return (
       <div
@@ -1304,6 +1304,7 @@ function SceneDialog({
             <option value="charts">Timing test charts · click track</option>
             {sources.includes('last-train-v1')&&<option value="last-train-v1">The last train · Google-voiced dialogue rehearsal</option>}
             {sources.includes('last-train-animatic-v1')&&<option value="last-train-animatic-v1">The last train · cinematic animatic (derived views)</option>}
+            {sources.includes('open-cafe-v1')&&<option value="open-cafe-v1">The letter · live-action café rehearsal (derived views)</option>}
           </select>
         </label>
         <label>

@@ -16,6 +16,7 @@ Prepare ahead of time to avoid first-ARM encoding latency:
 .venv/bin/python -m scripts.prepare_framecodes data/fixtures
 .venv/bin/python -m scripts.prepare_framecodes data/scenes/last-train-v1
 .venv/bin/python -m scripts.prepare_framecodes data/scenes/last-train-animatic-v1
+.venv/bin/python -m scripts.prepare_framecodes data/scenes/open-cafe-v1
 ```
 
 Preparation is serialized by the API. Existing verified generations are reused, with file hashes checked. Sources must be zero-based, 960×540, 30 fps files with the expected frame count. Other source formats are rejected, not implicitly assigned an invented timecode.

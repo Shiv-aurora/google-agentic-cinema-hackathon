@@ -109,7 +109,7 @@ def active_take(doc):
 
 
 def source_dir(source_set):
-    return DATA / {"charts": "fixtures", "last-train-v1": "scenes/last-train-v1", "last-train-animatic-v1": "scenes/last-train-animatic-v1"}[source_set]
+    return DATA / {"charts": "fixtures", "last-train-v1": "scenes/last-train-v1", "last-train-animatic-v1": "scenes/last-train-animatic-v1", "open-cafe-v1": "scenes/open-cafe-v1"}[source_set]
 
 
 def take_sources(take):
@@ -118,7 +118,7 @@ def take_sources(take):
 
 
 def has_dialogue(source_set):
-    return source_set in ("last-train-v1", "last-train-animatic-v1")
+    return source_set in ("last-train-v1", "last-train-animatic-v1", "open-cafe-v1")
 
 
 def apply_queued(doc):
@@ -159,7 +159,7 @@ class Command(BaseModel):
 class SceneUpdate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     script: str = Field(max_length=20000)
-    source_set: Literal["charts", "last-train-v1", "last-train-animatic-v1"] = "charts"
+    source_set: Literal["charts", "last-train-v1", "last-train-animatic-v1", "open-cafe-v1"] = "charts"
 
 
 @app.get("/api/health")
@@ -172,7 +172,7 @@ async def health():
     return {"status": "ok", "access_required": invitation_required(), "media": media, "fixtures": (DATA / "fixtures/manifest.json").exists(),
             "ai": {"ready": director.ready, "reason": director.error},
             "memory": {"ready": memory.ready, "reason": memory.error},
-            "sources": [name for name in ("charts", "last-train-v1", "last-train-animatic-v1") if (source_dir(name)/"manifest.json").exists()]}
+            "sources": [name for name in ("charts", "last-train-v1", "last-train-animatic-v1", "open-cafe-v1") if (source_dir(name)/"manifest.json").exists()]}
 
 
 @app.post("/api/sessions")

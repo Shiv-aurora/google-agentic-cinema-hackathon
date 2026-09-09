@@ -18,7 +18,7 @@ can change its ephemeral IP. Disk storage remains billable after STOP.
 
 ## Demonstrate the real loop
 
-1. Scene settings: select the cinematic animatic and inspect the six-line scene.
+1. Scene settings: select the live-action café rehearsal and inspect the six-line scene.
    Explain that the three virtual iPhones are derived views of an original
    Google-generated still, with synthesized dialogue—not physical cameras.
 2. Enable AI director, then Arm cameras. Speak a direction → “Roll cameras” →

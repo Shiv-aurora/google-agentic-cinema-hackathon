@@ -2,7 +2,7 @@
 
 Your little film crew: a Google-powered director for multicamera production.
 
-**In development.** This demo uses three labeled virtual iPhones and owned synthetic footage, including a cinematic still-frame animatic with Google voices. It transports/records actual media, renders OTIO edits, follows dialogue through actual Google transcription, and uses Google ADK + official ClickHouse MCP for direction. A protected Google Cloud deployment is now running; exact live-cut synchronization and final acceptance remain in progress. See [build evidence](docs/BUILD_STATUS.md) and [implementation plan](IMPLEMENTATION_PLAN.md).
+**In development.** This demo uses three labeled virtual iPhones and includes an openly licensed live-action rehearsal derived from one synchronized 4K master. It transports/records actual media, renders OTIO edits, follows Google-voiced dialogue through actual Google transcription, and uses Google ADK + official ClickHouse MCP for direction. A protected Google Cloud deployment is now running; exact live-cut synchronization and final acceptance remain in progress. See [build evidence](docs/BUILD_STATUS.md) and [implementation plan](IMPLEMENTATION_PLAN.md).
 
 ## Hosted demo
 
@@ -55,6 +55,14 @@ CLAPPY_AUTH_MODE=gcloud .venv/bin/python -m scripts.generate_scene_visual
 ```
 
 Select “cinematic animatic (derived views)” in Scene settings. These are crops of one generated still with camera motion and synthesized dialogue—not independent live-action angles or lip-synced video. Provenance and disclosure accompany the media. Use the monitor's sound button to enable one continuous master feed; all other players stay muted. A/B review keeps your playhead and playback state when changing versions.
+
+For the strongest visual demo, prepare the downloaded open-footage rehearsal:
+
+```sh
+.venv/bin/python -m scripts.prepare_open_footage
+```
+
+Select “The letter · live-action café rehearsal” in Scene settings. The 4K Pexels master by cottonbro studio is converted into synchronized Tom, Bella, and two-shot crops and paired with the same fictional Google-voiced rehearsal dialogue. The views are explicitly derived—not physical cameras or lip-synced performances. Full source and license provenance live beside the downloaded master in `assets/demo/open-cafe-v1/`.
 
 The development project defaults explicitly to `clappy-cinema-2026-0907`; override `CLAPPY_GOOGLE_PROJECT` for your own project. `CLAPPY_AUTH_MODE=gcloud` refreshes tokens through the already signed-in CLI without writing/logging them. Omit that setting to use standard ADC (required for deployment). `.env.example` documents settings; export them or pass `--env-file .env` to uvicorn.
 
