@@ -11,10 +11,12 @@ import {
   Layers,
   LoaderCircle,
   Maximize2,
+  Moon,
   Radio,
   Settings2,
   ShieldCheck,
   Square,
+  Sun,
   Video,
   Volume2,
   VolumeX,
@@ -22,7 +24,12 @@ import {
   X,
 } from "lucide-react";
 import type { Camera, CameraId, Edit, Health, Session, Take } from "./types";
+import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/manrope";
 import "./style.css";
+import "./polish.css";
+import "./themes.css";
+import scenePlate from "../../assets/demo/last-train-v1/scene-preview.jpg";
 import { VoiceControl } from "./VoiceControl";
 import { useProgramMonitor } from "./useProgramMonitor";
 import { useSourceClock } from "./useSourceClock";
@@ -38,6 +45,14 @@ function clock(seconds = 0) {
 }
 
 function App() {
+  const [theme, setTheme] = useState<'light'|'dark'>(() => {
+    try { return localStorage.getItem('clappy-theme') === 'dark' ? 'dark' : 'light'; }
+    catch { return 'light'; }
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem('clappy-theme', theme); } catch { /* Browsing without storage remains usable. */ }
+  }, [theme]);
   const [session, setSession] = useState<Session | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
@@ -251,6 +266,8 @@ function App() {
           className={page === "shoot" ? "active" : ""}
           onClick={() => setPage("shoot")}
           title="Production"
+          disabled={!session}
+          aria-pressed={page === "shoot"}
         >
           <Video size={21} />
         </button>
@@ -258,6 +275,8 @@ function App() {
           className={page === "review" ? "active" : ""}
           onClick={() => setPage("review")}
           title="Review takes"
+          disabled={!session}
+          aria-pressed={page === "review"}
         >
           <Layers size={21} />
         </button>
@@ -273,24 +292,26 @@ function App() {
           <div className="breadcrumb">
             Productions <span>/</span> {session?.title || "New production"}
           </div>
-          <button className="text-button" onClick={inspect}>
+          <button className="secondary theme-toggle" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} onClick={() => setTheme(value => value === 'light' ? 'dark' : 'light')}>
+            {theme === 'light' ? <Moon size={16}/> : <Sun size={16}/>}
+          </button>
+          <button className="text-button" onClick={inspect} disabled={!session}>
             <Radio size={14} />
             <span className={connected ? "dot online" : "dot"} />
-            {connected ? "Connected" : "Connecting"}
+            {needsInvite ? "Invitation required" : connected ? "Connected" : "Connecting"}
           </button>
         </header>
         <div className="workspace">
           <div className="production-header">
             <div>
-              <div className="eyebrow">YOUR LITTLE FILM CREW</div>
               <h1>
-                {session?.title || "Setting the scene…"}{" "}
-                <span className="scene-chip">SCENE 01</span>
+                {session?.title || (needsInvite ? "Welcome to the studio." : "Setting the scene…")}{" "}
+                {session && <span className="scene-chip">SCENE 01</span>}
               </h1>
-              <p>Three cameras. One scene. You're in the director's chair.</p>
             </div>
             <button
               className="secondary"
+              aria-label="Scene settings"
               disabled={!session || rolling || transitioning}
               onClick={() => setSceneOpen(true)}
             >
@@ -301,6 +322,8 @@ function App() {
             <div>
               <button
                 className={page === "shoot" ? "selected" : ""}
+                aria-pressed={page === "shoot"}
+                disabled={!session}
                 onClick={() => setPage("shoot")}
               >
                 <Video size={15} />
@@ -308,6 +331,8 @@ function App() {
               </button>
               <button
                 className={page === "review" ? "selected" : ""}
+                aria-pressed={page === "review"}
+                disabled={!session}
                 onClick={() => setPage("review")}
               >
                 <Film size={15} />
@@ -393,6 +418,8 @@ function App() {
                           <p>
                             {transitioning
                               ? "Waiting for real media acknowledgments."
+                              : session.state === "ARMED"
+                                ? "Roll cameras or speak a direction when you're ready."
                               : "Arm the virtual cameras to begin your rehearsal."}
                           </p>
                         </div>
@@ -575,6 +602,11 @@ function App() {
               />
             )
           ) : needsInvite ? (
+            <div className="invite-layout">
+            <div className="invite-scene">
+              <img src={scenePlate} width="960" height="540" decoding="async" alt="Tom and Bella in The last train, an original Google-generated scene still" />
+              <div className="invite-scene-copy"><Clapperboard size={25}/><h2>One scene.<br/>A different point of view.</h2><p>Original Google-generated still. Virtual camera views.</p></div>
+            </div>
             <section className="invite-gate">
               <ShieldCheck size={30}/>
               <h2>Your invitation to the director's chair.</h2>
@@ -595,6 +627,7 @@ function App() {
               </form>
               <small>Your invitation code is not saved. Your production key stays on this browser.</small>
             </section>
+            </div>
           ) : (
             <div className="loading">
               {error?<button className="secondary" onClick={()=>location.reload()}>Retry connection</button>:<><LoaderCircle className="spin" /> Connecting to your production…</>}
@@ -604,7 +637,7 @@ function App() {
             <span>
               CLAPPY <i /> A SMALL CREW, A BIGGER PICTURE.
             </span>
-            <span>
+            {session && <span>
               Media hub{" "}
               <b className={health?.media.ready ? "good" : ""}>
                 {health?.media.ready ? "online" : "offline"}
@@ -617,7 +650,7 @@ function App() {
               <b className={health?.memory.ready ? "good" : ""}>
                 {health?.memory.ready ? "online" : "offline"}
               </b>
-            </span>
+            </span>}
           </footer>
         </div>
       </main>
@@ -799,10 +832,18 @@ function Review({
     session.takes.find((t) => t.id === selected) || session.takes.at(-1);
   const [editId, setEditId] = useState<string | null>(null);
   const player = useRef<HTMLVideoElement|null>(null);
+  const takeList = useRef<HTMLElement|null>(null);
   const resume = useRef({time:0,playing:false});
   const edit = take?.edits.find((e) => e.id === editId) || take?.edits[0];
   const base = edit ? `/api/sessions/${session.id}/edits/${edit.id}` : "";
   const allocation=(version:Edit|undefined,camera:CameraId)=>version&&take?.duration?100*version.segments.filter(s=>s.camera===camera).reduce((n,s)=>n+s.end-s.start,0)/take.duration:0;
+  useEffect(() => {
+    const list = takeList.current;
+    const selectedTake = list?.querySelector<HTMLElement>('button.selected');
+    if (list && selectedTake && list.scrollWidth > list.clientWidth) {
+      list.scrollLeft = selectedTake.offsetLeft - list.offsetLeft;
+    }
+  }, [take?.id]);
   if (!take)
     return (
       <div className="empty-review">
@@ -813,12 +854,13 @@ function Review({
     );
   return (
     <div className="review-layout">
-      <aside className="take-list">
+      <aside className="take-list" ref={takeList} aria-label="Saved takes">
         <div className="eyebrow">YOUR TAKES</div>
         {session.takes.map((t) => (
           <button
             key={t.id}
             className={t.id === take.id ? "selected" : ""}
+            aria-pressed={t.id === take.id}
             onClick={() => {
               setSelected(t.id);
               setEditId(null);
@@ -903,6 +945,7 @@ function Review({
                       e.id === edit.id ? "secondary selected" : "secondary"
                     }
                     key={e.id}
+                    aria-pressed={e.id === edit.id}
                     onClick={() => {resume.current={time:player.current?.currentTime||0,playing:!!player.current&&!player.current.paused};setEditId(e.id);}}
                   >
                     {e.name}

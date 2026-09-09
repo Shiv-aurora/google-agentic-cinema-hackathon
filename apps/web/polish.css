@@ -1,0 +1,252 @@
+/* Preserve-mode refinement. Existing studio IA and media state remain intact.
+   Radii: controls 8px, panels 14px, phone hardware 18px. Layers: rail 10,
+   transport 15, dialogs 20. Motion is interaction feedback, never decoration. */
+:root {
+  font-family: 'DM Sans Variable', 'DM Sans', sans-serif;
+  --mint: var(--shade-90);
+  --muted: var(--shade-65);
+  --line: var(--shade-20);
+  --panel: var(--shade-10);
+  --surface: var(--shade-10);
+  --control: var(--shade-15);
+  background: var(--surface);
+  color: var(--shade-95);
+}
+body { background: var(--surface); }
+::selection { color: var(--shade-10); background: var(--mint); }
+button, a, input, textarea, select { touch-action: manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 4px;
+}
+button:hover:not(:disabled) { filter: none; }
+button:active:not(:disabled), a.primary:active, a.secondary:active { transform: translateY(1px); }
+button, .primary, .secondary { transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease; }
+button:disabled { opacity: .55; }
+.app-shell { min-height: 100dvh; }
+.wordmark, h1, .standby-message h2, .camera-info h3,
+.empty-review h2, .rendering h2, .modal h2, .invite-layout h2 {
+  font-family: 'Manrope Variable', Manrope, sans-serif;
+}
+.rail { background: var(--shade-10); padding-top: 24px; }
+.rail > button { color: var(--shade-65); min-height: 44px; }
+.rail > button:hover { background: var(--shade-15); color: var(--shade-95); }
+.brand-icon { border-radius: 12px; box-shadow: inset 0 1px 0 var(--shade-95); }
+.topbar { height: 72px; border-color: var(--shade-20); }
+.breadcrumb { color: var(--shade-70); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar > .text-button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; flex-shrink: 0; }
+.text-button { color: var(--shade-75); font-size: 12px; }
+.workspace { max-width: 1480px; padding-top: 32px; padding-bottom: 36px; }
+.production-header { gap: 24px; }
+.production-header > div { min-width: 0; }
+.eyebrow { color: var(--shade-75); font-size: 10px; letter-spacing: 1.8px; margin-bottom: 12px; }
+h1 { font-size: clamp(27px, 2.6vw, 38px); font-weight: 600; letter-spacing: -1.5px; flex-wrap: wrap; overflow-wrap: anywhere; line-height: 1.2; }
+.scene-chip { font-size: 9px; color: var(--shade-75); border-color: var(--shade-30); letter-spacing: 1.3px; }
+.production-header p { font-size: 14px; line-height: 1.6; margin-top: 12px; }
+.secondary, .primary { min-height: 40px; padding: 10px 14px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
+.secondary { background: var(--control); color: var(--shade-85); border-color: var(--shade-30); }
+.secondary:hover:not(:disabled) { background: var(--shade-20); border-color: var(--shade-45); }
+.primary:hover:not(:disabled), .roll-button:not(.cut):hover:not(:disabled) { background: var(--shade-90); border-color: var(--shade-90); }
+.workspace-tabs { margin-top: 30px; margin-bottom: 24px; }
+.workspace-tabs button { font-size: 13px; min-height: 44px; padding-bottom: 16px; color: var(--shade-70); }
+.workspace-tabs button:hover { color: var(--shade-90); }
+.workspace-tabs button span { font-size: 10px; min-width: 20px; text-align: center; padding: 2px 5px; }
+.mode-label { font-size: 9px; letter-spacing: 1.3px; color: var(--shade-70); margin-top: 9px; }
+.shoot-grid { grid-template-columns: minmax(0, 1fr) 310px; gap: 20px; align-items: stretch; }
+.program-panel, .script-panel, .review-main { border-radius: 14px; background: var(--panel); }
+.panel-title { height: 46px; color: var(--shade-75); font-size: 10px; letter-spacing: 1.2px; background: var(--shade-15); }
+.panel-title > span:last-child, .take-counter strong, .timeline, .allocation strong { font-variant-numeric: tabular-nums; }
+.program-caption { color: var(--shade-70); font-size: 11px; padding: 13px 17px; }
+.program-overlay { z-index: 1; background: color-mix(in srgb, var(--shade-10) 87%, transparent); padding: 9px 11px; border-radius: 7px; width: max-content; max-width: calc(100% - 36px); right: auto; gap: 24px; }
+.program-overlay small { color: var(--shade-80); }
+.standby-message { background: linear-gradient(0deg, color-mix(in srgb, var(--shade-10) 96%, transparent), color-mix(in srgb, var(--shade-10) 44%, transparent) 70%); justify-content: flex-end; align-items: flex-start; padding: 36px; padding-bottom: 76px; }
+.standby-message h2 { font-size: clamp(21px, 2vw, 30px); color: var(--shade-95); margin: 14px 0 10px; font-weight: 500; }
+.standby-message p { color: var(--shade-80); font-size: 13px; line-height: 1.6; max-width: 42ch; }
+.standby-message > svg { width: 28px; height: 28px; }
+.script-panel { max-height: 520px; }
+.script-heading { color: var(--shade-70); font-size: 10px; padding: 20px 20px 12px; line-height: 1.6; }
+.script-body { scrollbar-width: thin; scrollbar-color: var(--shade-30) transparent; }
+.script-line { padding: 12px 10px; gap: 12px; }
+.script-line h4 { color: var(--shade-75); font-size: 10px; }
+.script-line p { font-size: 13px; color: var(--shade-85); line-height: 1.7; }
+.line-num { font-size: 10px; color: var(--shade-65); font-variant-numeric: tabular-nums; }
+.script-line.current { background: var(--shade-20); box-shadow: inset 2px 0 var(--mint); }
+.script-footer { font-size: 10px; color: var(--shade-70); line-height: 1.5; }
+.icon-button { min-width: 32px; min-height: 32px; }
+.section-label { margin-top: 28px; margin-bottom: 14px; font-size: 10px; color: var(--shade-80); }
+.section-label small, .section-label > span + span { font-size: 11px; color: var(--shade-65); }
+.camera-card { border-radius: 12px; transition: border-color 160ms ease; }
+.camera-card:hover { border-color: var(--shade-45); }
+.camera-card.selected { border-color: var(--shade-75); box-shadow: inset 0 1px 0 var(--shade-75); }
+.camera-card-header { height: 40px; font-size: 11px; }
+.camera-card-header b { width: 21px; height: 21px; font-size: 10px; }
+.camera-state { color: var(--shade-70); font-size: 9px; letter-spacing: .8px; }
+.camera-select { background: var(--shade-15); gap: 22px; padding: 16px; }
+.camera-select:hover { background: var(--shade-20) !important; }
+.camera-info h3 { font-size: 23px; color: var(--shade-90); }
+.camera-info p { font-size: 12px; color: var(--shade-75); }
+.camera-spec { font-size: 10px; color: var(--shade-70); margin-top: 20px; }
+.camera-card-footer { height: 42px; }
+.camera-card-footer > span { font-size: 9px; color: var(--shade-70); letter-spacing: .6px; }
+.camera-card-footer button { min-height: 36px; font-size: 11px; color: var(--shade-85); }
+.direction-bar { background: var(--shade-15); border-color: var(--shade-30); border-radius: 12px; padding: 17px; gap: 14px; }
+.direction-bar > div:nth-child(2) { min-width: 0; flex: 1; }
+.direction-bar strong { font-size: 13px; color: var(--shade-90); line-height: 1.5; }
+.direction-bar p { font-size: 12px; color: var(--shade-70); line-height: 1.5; }
+.transport { background: var(--shade-15); border-color: var(--shade-40); border-radius: 12px; padding: 14px 18px; box-shadow: 0 8px 28px color-mix(in srgb, var(--shade-5) 85%, transparent); bottom: max(12px, env(safe-area-inset-bottom)); }
+.take-counter { gap: 12px; }
+.take-counter span { font-size: 10px; color: var(--shade-75); }
+.take-counter strong { font-size: 19px; }
+.transport-status { font-size: 12px; color: var(--shade-80); }
+.roll-button { min-height: 46px; border-radius: 8px; font-size: 14px; }
+.roll-button.cut:hover:not(:disabled) { background: var(--shade-75); }
+.voice-control { gap: 16px; margin: 20px 0; }
+.voice-control > span { font-size: 12px; color: var(--shade-75); }
+.agent-note { background: var(--shade-15); border-color: var(--shade-30); border-radius: 12px; padding: 22px; }
+.agent-note-title strong { font-size: 16px; font-weight: 600; }
+.agent-note-title p { font-size: 12px; line-height: 1.6; color: var(--shade-75); }
+.agent-note input { font-size: 14px; background: var(--shade-10); border-color: var(--shade-40); border-radius: 8px; min-height: 46px; }
+input::placeholder, textarea::placeholder { color: var(--shade-70); opacity: 1; }
+.agent-response { color: var(--shade-90); font-size: 14px; line-height: 1.7; }
+.review-layout { grid-template-columns: 190px minmax(0, 1fr); gap: 24px; }
+.take-list { position: relative; }
+.take-list > button { padding: 15px 12px; margin-bottom: 4px; border: 1px solid transparent; border-radius: 8px; color: var(--shade-75); }
+.take-list > button:hover { background: var(--shade-15); }
+.take-list > button.selected { background: var(--shade-20); border-color: var(--shade-40); color: var(--shade-90); }
+.take-list strong { font-size: 13px; }
+.take-list span { font-size: 11px; }
+.review-main { min-width: 0; }
+.review-player { background: var(--shade-5); }
+.review-meta { color: var(--shade-75); font-size: 11px; line-height: 1.6; flex-wrap: wrap; }
+.allocation { padding-top: 13px; padding-bottom: 20px; }
+.allocation > div { font-size: 12px; }
+.allocation span { color: var(--shade-75); }
+.allocation strong { color: var(--shade-90); }
+.allocation-track { height: 4px; margin-top: 11px; }
+.timeline { height: 48px; }
+.timeline span { font-size: 10px; }
+.edit-actions { flex-wrap: wrap; padding: 18px 20px; }
+.edit-actions > div { flex-wrap: wrap; min-width: 0; }
+.edit-actions .selected { background: var(--shade-25); border-color: var(--shade-75); color: var(--shade-95); }
+.modal { border-radius: 14px; border-color: var(--shade-40); padding: 28px; }
+.modal input, .modal textarea, .modal select { border-radius: 8px; font-size: 14px; min-height: 46px; }
+.modal label { font-size: 13px; color: var(--shade-80); }
+footer { color: var(--shade-65); font-size: 9px; line-height: 1.8; letter-spacing: .5px; }
+footer b { color: var(--shade-70); }
+.invite-layout { display: grid; grid-template-columns: 1.05fr 1fr; max-width: 1120px; margin: 40px auto 64px; border: 1px solid var(--shade-30); border-radius: 16px; overflow: hidden; background: var(--shade-15); }
+.invite-scene { position: relative; min-height: 440px; background: var(--shade-10); }
+.invite-scene > img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; object-position: 60% center; }
+.invite-scene-copy { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 36px; background: linear-gradient(0deg, color-mix(in srgb, var(--shade-10) 98%, transparent), color-mix(in srgb, var(--shade-10) 0%, transparent) 85%); }
+.invite-scene-copy h2 { font-size: 32px; line-height: 1.25; letter-spacing: -1px; font-weight: 500; margin: 20px 0; }
+.invite-scene-copy p { font-size: 11px; color: var(--shade-80); line-height: 1.6; }
+.invite-gate { margin: 0; border: 0; border-radius: 0; background: transparent; padding: 48px 36px; }
+.invite-gate > svg { color: var(--mint); }
+.invite-gate h2 { font-size: 29px; font-weight: 500; line-height: 1.3; }
+.invite-gate p { font-size: 14px; }
+.invite-gate small { font-size: 12px; }
+.invite-gate label { font-size: 13px; color: var(--shade-85); }
+.invite-gate input { font-size: 16px; }
+.invite-gate form button { min-height: 46px; }
+@media (max-width: 1120px) {
+  .shoot-grid { grid-template-columns: minmax(0, 1fr) 260px; }
+  .camera-select { gap: 14px; padding: 12px; }
+  .camera-info h3 { font-size: 19px; }
+  .camera-spec { font-size: 9px; }
+  .camera-card-footer > span { font-size: 8px; }
+  .camera-card-footer button { font-size: 10px; }
+  .direction-bar { flex-wrap: wrap; }
+}
+@media (max-width: 850px) {
+  .shoot-grid, .review-layout { grid-template-columns: minmax(0, 1fr); }
+  .script-panel { display: flex; max-height: 260px; }
+  .script-heading { padding-top: 12px; }
+  .script-line { padding-block: 8px; }
+  .take-list { overflow-x: auto; padding: 4px 0 10px; scrollbar-width: thin; scrollbar-color: var(--shade-40) transparent; }
+  .take-list > button { flex: 0 0 170px; margin: 0; }
+  .take-list span { white-space: nowrap; }
+  .camera-spec { display: none; }
+  .invite-layout { grid-template-columns: 1fr; }
+  .invite-scene { min-height: 250px; }
+  .invite-scene-copy { padding: 24px; }
+  .invite-scene-copy > svg { display: none; }
+  .invite-scene-copy h2 { font-size: 26px; margin: 0 0 12px; }
+}
+@media (max-width: 580px) {
+  .rail { width: 50px; }
+  .rail > button { width: 44px; }
+  .workspace { padding: 24px 14px 24px; }
+  .topbar { height: 64px; padding: 0 14px; gap: 12px; }
+  .topbar > .text-button { border: 0; padding: 8px 0; gap: 5px; font-size: 10px; }
+  .topbar > .text-button > svg { display: none; }
+  .production-header { gap: 8px; }
+  .production-header > .secondary { min-width: 44px; min-height: 44px; padding: 10px; }
+  h1 { font-size: 28px; letter-spacing: -1px; }
+  .production-header p { font-size: 12px; max-width: 30ch; }
+  .eyebrow { font-size: 9px; letter-spacing: 1.2px; }
+  .workspace-tabs { margin-top: 24px; margin-bottom: 18px; }
+  .workspace-tabs button { font-size: 12px; }
+  .panel-title { height: 42px; font-size: 8px; padding: 0 10px; letter-spacing: .6px; gap: 6px; }
+  .panel-title .text-button { font-size: 0; min-width: 36px; min-height: 36px; justify-content: center; }
+  .standby-message { padding: 16px 16px 50px; }
+  .standby-message > svg { display: none; }
+  .standby-message h2 { font-size: 18px; margin: 0 0 6px; }
+  .standby-message p { font-size: 11px; line-height: 1.5; }
+  .program-overlay { padding: 5px 7px; bottom: 8px; left: 10px; gap: 12px; }
+  .program-overlay small { font-size: 7px; }
+  .program-caption { font-size: 9px; padding: 10px; flex-wrap: wrap; gap: 6px; }
+  .program-caption > svg { width: 12px; }
+  .section-label { font-size: 10px; line-height: 1.5; }
+  .section-label small { display: block; margin-left: 0; margin-top: 3px; font-size: 10px; }
+  .camera-grid { grid-template-columns: 1fr; gap: 12px; }
+  .camera-card-header { padding: 0 14px; height: 36px; }
+  .camera-card-header > span:first-child { font-size: 11px; }
+  .camera-state { font-size: 9px; }
+  .camera-select { flex-direction: row; padding: 14px 18px; gap: 24px; }
+  .phone-frame { width: 78px; height: 118px; border-radius: 14px; }
+  .camera-info { text-align: left; }
+  .camera-info h3 { font-size: 24px; }
+  .camera-info p { font-size: 12px; }
+  .camera-card-footer { justify-content: space-between; padding: 0 14px; height: 44px; }
+  .camera-card-footer > span { display: flex; font-size: 9px; }
+  .camera-card-footer button { min-height: 44px; font-size: 12px; }
+  .direction-bar { padding: 16px; gap: 12px; }
+  .direction-bar strong { font-size: 13px; }
+  .direction-bar p { font-size: 11px; }
+  .direction-bar > .secondary { margin-left: 40px; min-height: 44px; }
+  .transport { padding: 13px; gap: 12px; bottom: max(8px, env(safe-area-inset-bottom)); }
+  .take-counter { gap: 7px; }
+  .take-counter span { font-size: 9px; }
+  .take-counter strong { font-size: 16px; }
+  .transport-status { font-size: 10px; margin-right: 0; }
+  .roll-button { min-height: 46px; }
+  .voice-control { gap: 10px; }
+  .voice-control > button { width: 100%; min-height: 44px; }
+  .voice-control > span { font-size: 12px; }
+  .agent-note { padding: 16px; }
+  .agent-note-title { gap: 10px; align-items: flex-start; }
+  .agent-note-title > svg { flex-shrink: 0; }
+  .agent-note-title strong { font-size: 15px; }
+  .agent-note-title p { font-size: 12px; }
+  .agent-note input { font-size: 16px; }
+  .agent-note .primary { min-height: 44px; }
+  .review-main > .agent-note { margin: 12px; }
+  .review-meta { font-size: 10px; padding: 8px 12px 14px; }
+  .allocation { padding: 8px 12px 14px; gap: 12px; }
+  .allocation > div { font-size: 10px; }
+  .timeline { margin: 14px 12px; height: 38px; }
+  .edit-actions { padding: 14px 12px; gap: 14px; }
+  .edit-actions > div { width: 100%; }
+  .edit-actions .secondary, .edit-actions .primary { white-space: normal; overflow-wrap: anywhere; min-height: 44px; font-size: 11px; }
+  .invite-layout { margin: 24px auto; }
+  .invite-scene { min-height: 220px; }
+  .invite-scene-copy h2 { font-size: 23px; }
+  .invite-gate { padding: 24px; }
+  .invite-gate h2 { font-size: 24px; }
+  .modal input, .modal textarea, .modal select { font-size: 16px; }
+  footer { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button, .primary, .secondary, .camera-card { transition: none; }
+  button:active:not(:disabled), a.primary:active, a.secondary:active { transform: none; }
+}
