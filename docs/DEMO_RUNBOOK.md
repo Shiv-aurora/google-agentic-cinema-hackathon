@@ -7,7 +7,7 @@ alternate and A/B review; synthetic browser voice is verified separately.
 
 ## Open the actual app
 
-Use https://35-254-38-201.sslip.io, not the raw player HTML file. The private
+Use https://34-133-211-128.sslip.io, not the raw player HTML file. The private
 invitation is in local `data/hosting-access.json`; do not put it in a recording or
 public URL. A browser keeps its production key locally. Keep that browser's
 storage to return to its takes. The one-VM demo supports one active rig at a time.

@@ -22,7 +22,7 @@ def main():
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     os.fchmod(descriptor, 0o600)
     with os.fdopen(descriptor, "w") as handle:
-        json.dump({"origin": "https://35-254-38-201.sslip.io", "invitation": invite}, handle)
+        json.dump({"origin": "https://34-133-211-128.sslip.io", "invitation": invite}, handle)
     print("Hosting invitation saved privately to data/hosting-access.json; value not displayed.")
 
 

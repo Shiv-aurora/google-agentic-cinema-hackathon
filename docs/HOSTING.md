@@ -6,7 +6,7 @@ The user approved hosting up to $25 against the linked Google Cloud billing acco
 
 - Project: `clappy-cinema-2026-0907` (all commands must select it explicitly).
 - VM: `clappy-demo-1`, `us-central1-a`, `e2-standard-4`, Ubuntu 24.04, 30 GB standard persistent boot disk.
-- Site: https://35-254-38-201.sslip.io — free DNS based on the current ephemeral IP; a stopped/restarted VM may receive a different address, requiring DNS/config/certificate updates.
+- Site: https://34-133-211-128.sslip.io — free DNS based on the current ephemeral IP; a stopped/restarted VM may receive a different address, requiring DNS/config/certificate updates.
 - Isolated `clappy-demo` network and `clappy-demo-central` subnet. SSH only through Google's authenticated IAP range; HTTP/HTTPS and WebRTC TCP/UDP 8189 are the only public application ports. RTSP, MediaMTX API, ClickHouse and the coordinator bind to loopback.
 - Runtime service account: `clappy-runtime@clappy-cinema-2026-0907.iam.gserviceaccount.com`, with project-scoped Vertex AI user, Speech client and Service Usage consumer. No exported service-account key or developer credentials. Runtime uses metadata-based ADC.
 - A trusted Let's Encrypt certificate was issued and installed. No TLS-validation bypass is part of deployment.
@@ -42,7 +42,7 @@ Check status without printing credentials:
 
 ```sh
 gcloud compute ssh clappy-demo-1 --project=clappy-cinema-2026-0907 --zone=us-central1-a --tunnel-through-iap --command='sudo systemctl is-active clappy nginx clappy-guard.timer'
-curl --fail https://35-254-38-201.sslip.io/api/health
+curl --fail https://34-133-211-128.sslip.io/api/health
 ```
 
 To stop compute while preserving recordings:

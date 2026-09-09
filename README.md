@@ -6,7 +6,7 @@ Your little film crew: a Google-powered director for multicamera production.
 
 ## Hosted demo
 
-[Open Clappy](https://35-254-38-201.sslip.io). An invitation is required. The deployment has a 24-hour automatic VM stop, conservative operation allowances and an egress circuit breaker; the persistent disk remains billable after STOP. See [hosting and recovery](docs/HOSTING.md). Never use the raw `apps/player/index.html` file as the app: it is an authenticated player template, not the studio entry point.
+[Open Clappy](https://34-133-211-128.sslip.io). An invitation is required. The deployment has a 24-hour automatic VM stop, conservative operation allowances and an egress circuit breaker; the persistent disk remains billable after STOP. See [hosting and recovery](docs/HOSTING.md). Never use the raw `apps/player/index.html` file as the app: it is an authenticated player template, not the studio entry point.
 
 Follow the [demo runbook](docs/DEMO_RUNBOOK.md) for the complete camera → Google direction → preserved original → alternate-edit loop. [Attribution and source provenance](docs/THIRD_PARTY_NOTICES.md) document the OSS foundation and synthetic-media scope.
 

@@ -33,7 +33,7 @@ Clickhouse
 ## Project Links
 
 - Repository: https://github.com/Shiv-aurora/google-agentic-cinema-hackathon
-- Hosted project: https://35-254-38-201.sslip.io
+- Hosted project: https://34-133-211-128.sslip.io
 
 ## Status
 
